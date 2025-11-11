@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:msp_app/shared/entities/project.dart';
-import 'package:msp_app/shared/mock_data/project_mock_data.dart';
 import 'package:msp_app/features/auth/presentation/pages/login_page.dart';
 import 'package:msp_app/features/memberSchedule/presentation/pages/member_schedule_page.dart';
-import 'package:msp_app/features/project/presentation/pages/project_detail_page.dart';
-import 'package:msp_app/features/project/presentation/pages/list_projects_page.dart';
-import 'package:msp_app/features/task/presentation/pages/list_tasks_page.dart';
 import '../widgets/stats_cards_section.dart';
 import '../widgets/upcoming_tasks_section.dart';
 import '../widgets/projects_section.dart';
@@ -34,7 +30,7 @@ class _MemberDashboardPageState extends State<MemberDashboardPage> {
   String organizationName = "MSP Organization";
 
   // Lấy projects từ mock data
-  List<Project> get projectsData => ProjectMockData.getProjects();
+  // List<Project> get projectsData => ProjectMockData.getProjects();
 
   // Task counts
   int get assignedTasksCount => 12;
@@ -47,15 +43,16 @@ class _MemberDashboardPageState extends State<MemberDashboardPage> {
     _loadUserData();
   }
 
-          Future<void> _loadUserData() async {
-            final prefs = await SharedPreferences.getInstance();
-            setState(() {
-              userName = prefs.getString('userName') ?? "User";
-              userEmail = prefs.getString('userEmail') ?? "user@example.com";
-              userRole = prefs.getString('userRole') ?? "Member";
-              organizationName = prefs.getString('organizationName') ?? "MSP Organization";
-            });
-          }
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userName = prefs.getString('userName') ?? "User";
+      userEmail = prefs.getString('userEmail') ?? "user@example.com";
+      userRole = prefs.getString('userRole') ?? "Member";
+      organizationName =
+          prefs.getString('organizationName') ?? "MSP Organization";
+    });
+  }
 
   // Mock upcoming tasks
   List<UpcomingTask> get upcomingTasks => [
@@ -112,7 +109,8 @@ class _MemberDashboardPageState extends State<MemberDashboardPage> {
     RecentActivity(
       id: '3',
       type: 'status_changed',
-      description: 'Bạn đã thay đổi status của "User Testing" thành In Progress',
+      description:
+          'Bạn đã thay đổi status của "User Testing" thành In Progress',
       projectName: 'Website Redesign',
       timestamp: DateTime.now().subtract(const Duration(days: 1)),
     ),
@@ -144,7 +142,7 @@ class _MemberDashboardPageState extends State<MemberDashboardPage> {
                 _buildUpcomingTasksSection(),
 
                 // My Projects
-                _buildProjectsSection(),
+                // _buildProjectsSection(),
 
                 // Recent Activity
                 _buildRecentActivitySection(),
@@ -199,11 +197,7 @@ class _MemberDashboardPageState extends State<MemberDashboardPage> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              primaryOrange,
-              lightOrange,
-              veryLightOrange,
-            ],
+            colors: [primaryOrange, lightOrange, veryLightOrange],
           ),
         ),
         child: SafeArea(
@@ -264,7 +258,10 @@ class _MemberDashboardPageState extends State<MemberDashboardPage> {
                     const SizedBox(height: 8),
                     // Role badge gọn gàng
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
@@ -326,7 +323,8 @@ class _MemberDashboardPageState extends State<MemberDashboardPage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const MemberSchedulePage(),
+                                    builder: (context) =>
+                                        const MemberSchedulePage(),
                                   ),
                                 );
                               },
@@ -337,12 +335,13 @@ class _MemberDashboardPageState extends State<MemberDashboardPage> {
                               subtitle: 'Xem tất cả dự án',
                               onTap: () {
                                 Navigator.pop(context);
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const ListProjectsPage(),
-                                  ),
-                                );
+                                // Navigator.push(
+                                //   context,
+                                //   MaterialPageRoute(
+                                //     builder: (context) =>
+                                //         const ListProjectsPage(),
+                                //   ),
+                                // );
                               },
                             ),
                             _buildDrawerItem(
@@ -351,12 +350,12 @@ class _MemberDashboardPageState extends State<MemberDashboardPage> {
                               subtitle: 'Quản lý công việc',
                               onTap: () {
                                 Navigator.pop(context);
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const ListTasksPage(),
-                                  ),
-                                );
+                                // Navigator.push(
+                                //   context,
+                                //   MaterialPageRoute(
+                                //     builder: (context) => const ListTasksPage(),
+                                //   ),
+                                // );
                               },
                             ),
                           ],
@@ -368,10 +367,7 @@ class _MemberDashboardPageState extends State<MemberDashboardPage> {
                         decoration: BoxDecoration(
                           color: Colors.grey[50],
                           border: Border(
-                            top: BorderSide(
-                              color: Colors.grey[200]!,
-                              width: 1,
-                            ),
+                            top: BorderSide(color: Colors.grey[200]!, width: 1),
                           ),
                         ),
                         child: _buildDrawerItem(
@@ -485,10 +481,7 @@ class _MemberDashboardPageState extends State<MemberDashboardPage> {
           ),
           title: const Text(
             'Đăng Xuất',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
           ),
           content: const Text(
             'Bạn có chắc chắn muốn đăng xuất?',
@@ -515,9 +508,7 @@ class _MemberDashboardPageState extends State<MemberDashboardPage> {
                 await prefs.clear();
                 // Navigate back to login page
                 Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(
-                    builder: (context) => const LoginPage(),
-                  ),
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
                   (route) => false,
                 );
               },
@@ -547,29 +538,25 @@ class _MemberDashboardPageState extends State<MemberDashboardPage> {
     );
   }
 
-          Widget _buildUpcomingTasksSection() {
-            return UpcomingTasksSection(
-              upcomingTasks: upcomingTasks,
-            );
-          }
+  Widget _buildUpcomingTasksSection() {
+    return UpcomingTasksSection(upcomingTasks: upcomingTasks);
+  }
 
-          Widget _buildProjectsSection() {
-            return ProjectsSection(
-              projects: projectsData,
-              onProjectTap: (project) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ProjectDetailPage(project: project),
-                  ),
-                );
-              },
-            );
-          }
+  // Widget _buildProjectsSection() {
+  //   return ProjectsSection(
+  //     projects: projectsData,
+  //     onProjectTap: (project) {
+  //       Navigator.push(
+  //         context,
+  //         MaterialPageRoute(
+  //           builder: (context) => ProjectDetailPage(project: project),
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
 
   Widget _buildRecentActivitySection() {
-    return RecentActivitySection(
-      recentActivities: recentActivities,
-    );
+    return RecentActivitySection(recentActivities: recentActivities);
   }
 }

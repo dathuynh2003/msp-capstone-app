@@ -1,36 +1,29 @@
-import 'package:msp_app/core/core.dart';
+import '../../../../core/network/api_config.dart';
+import '../../../../core/network/http_client.dart';
+import '../models/login_request.dart';
 import '../models/login_response.dart';
+import '../../../../core/models/api_response.dart';
+import 'dart:convert';
 
-abstract class AuthRemoteDataSource {
-  Future<LoginResponseModel> login(String username, String password);
-}
+class AuthRemoteDatasource {
+  Future<LoginResponse> login(LoginRequest request) async {
+    final uri = Uri.parse("${ApiConfig.apiBaseUrl}/auth/login");
+    final response = await HttpClient.post(
+      uri,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(request.toJson()),
+    );
+    final data = jsonDecode(response.body);
 
-class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
-  final ApiClient apiClient;
-
-  AuthRemoteDataSourceImpl({required this.apiClient});
-
-  @override
-  Future<LoginResponseModel> login(String username, String password) async {
-    try {
-      final response = await apiClient.post(
-        ApiEndpoints.login,
-        body: {
-          'username': username,
-          'password': password,
-        },
-      );
-      
-      return LoginResponseModel.fromJson(response);
-    } on AuthException {
-      rethrow;
-    } catch (e) {
-      // For demo purposes, keep the mock logic
-      if (username == "admin" && password == "123") {
-        return LoginResponseModel(token: "fake_token_123");
-      } else {
-        throw const AuthException(message: "Invalid username or password");
-      }
+    final apiRes = ApiResponse<LoginResponse>.fromJson(
+      data,
+      (json) => LoginResponse.fromJson(json),
+    );
+    if (response.statusCode == 200 && apiRes.success) {
+      if (apiRes.data == null) throw Exception("No login data returned!");
+      return apiRes.data!;
+    } else {
+      throw Exception(apiRes.message);
     }
   }
 }

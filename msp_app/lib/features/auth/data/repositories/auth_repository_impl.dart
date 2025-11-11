@@ -1,26 +1,34 @@
-import 'package:msp_app/core/errors/exceptions.dart';
-import 'package:msp_app/shared/entities/user.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
+
+import '../../domain/entities/user_token_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_datasource.dart';
+import '../models/login_request.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
-  final AuthRemoteDataSource remoteDataSource;
+  final AuthRemoteDatasource remote;
 
-  AuthRepositoryImpl({required this.remoteDataSource});
+  AuthRepositoryImpl(this.remote);
 
   @override
-  Future<User> login(String username, String password) async {
-    try {
-      final result = await remoteDataSource.login(username, password);
-      return result.toEntity();
-    } on AuthException {
-      rethrow;
-    } on NetworkException {
-      rethrow;
-    } on TimeoutException {
-      rethrow;
-    } catch (e) {
-      throw AuthException(message: 'Login failed: ${e.toString()}');
-    }
+  Future<UserTokenEntity> login(String email, String password) async {
+    final res = await remote.login(
+      LoginRequest(email: email, password: password),
+    );
+
+    // Decode accessToken để lấy info
+    final decoded = JwtDecoder.decode(res.accessToken);
+    final roles = (decoded['role'] as String).split(',');
+    final mainRole = roles.isNotEmpty ? roles.first : '';
+
+    return UserTokenEntity(
+      accessToken: res.accessToken,
+      refreshToken: res.refreshToken,
+      userId: decoded['userId'] ?? '',
+      email: decoded['email'] ?? '',
+      fullName: decoded['fullName'] ?? '',
+      avatarUrl: decoded['avatarUrl'] ?? '',
+      role: mainRole,
+    );
   }
 }

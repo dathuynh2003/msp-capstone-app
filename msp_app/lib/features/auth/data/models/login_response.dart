@@ -1,20 +1,11 @@
-import 'package:msp_app/shared/entities/user.dart';
+class LoginResponse {
+  final String accessToken;
+  final String refreshToken;
 
-class LoginResponseModel {
-  final String token;
+  LoginResponse({required this.accessToken, required this.refreshToken});
 
-  LoginResponseModel({required this.token});
-
-  factory LoginResponseModel.fromJson(Map<String, dynamic> json) {
-    return LoginResponseModel(token: json['token']);
-  }
-
-  User toEntity() => User(
-    id: '1',
-    email: 'user@example.com',
-    password: '',
-    name: 'User',
-    role: UserRole.member,
-    createdAt: DateTime.now(),
+  factory LoginResponse.fromJson(Map<String, dynamic> json) => LoginResponse(
+    accessToken: json["accessToken"] ?? "",
+    refreshToken: json["refreshToken"] ?? "",
   );
 }

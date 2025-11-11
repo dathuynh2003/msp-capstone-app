@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:msp_app/shared/entities/task.dart';
-import 'package:msp_app/features/task/presentation/pages/task_detail_page.dart';
-import 'package:msp_app/features/task/presentation/pages/list_tasks_page.dart';
 
 /// Task model for upcoming tasks
 class UpcomingTask {
@@ -45,22 +43,19 @@ class UpcomingTasksSection extends StatelessWidget {
             children: [
               const Text(
                 'Tasks sắp tới',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ListTasksPage(),
-                    ),
-                  );
-                },
-                child: const Text('Xem tất cả'),
-              ),
+              // TextButton(
+              //   onPressed: () {
+              //     Navigator.push(
+              //       context,
+              //       MaterialPageRoute(
+              //         builder: (context) => const ListTasksPage(),
+              //       ),
+              //     );
+              //   },
+              //   child: const Text('Xem tất cả'),
+              // ),
             ],
           ),
           ...upcomingTasks.take(3).map((task) => _buildTaskItem(context, task)),
@@ -145,20 +140,22 @@ class UpcomingTasksSection extends StatelessWidget {
             assigneeName: 'Current User', // Default assignee name
             assigneeEmail: 'user@example.com', // Default assignee email
             assigneeAvatar: '👤', // Default assignee avatar
-            startDate: DateTime.now().subtract(const Duration(days: 1)), // Default start date
+            startDate: DateTime.now().subtract(
+              const Duration(days: 1),
+            ), // Default start date
             dueDate: task.dueDate,
             status: 'In Progress', // Default status
             priority: task.priority,
             color: '#FF9800', // Default color (orange)
             projectName: task.projectName, // Project name from upcoming task
           );
-          
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TaskDetailPage(task: taskEntity),
-            ),
-          );
+
+          // Navigator.push(
+          //   context,
+          //   MaterialPageRoute(
+          //     builder: (context) => TaskDetailPage(task: taskEntity),
+          //   ),
+          // );
         },
       ),
     );

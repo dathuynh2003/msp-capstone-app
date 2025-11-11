@@ -7,11 +7,11 @@ export 'constants/api_endpoints.dart';
 
 // Errors
 export 'errors/failures.dart';
-export 'errors/exceptions.dart';
+export 'errors/logger.dart';
 
 // Network
-export 'network/api_client.dart';
-export 'network/network_info.dart';
+export 'network/api_config.dart';
+export 'network/http_client.dart';
 
 // Utils
 export 'utils/validators.dart';
@@ -19,9 +19,3 @@ export 'utils/date_utils.dart';
 
 // Dependency Injection
 export 'di/injection_container.dart';
-
-// Services
-export 'services/auth_service.dart';
-export 'services/storage_service.dart';
-export 'services/jwt_service.dart';
-

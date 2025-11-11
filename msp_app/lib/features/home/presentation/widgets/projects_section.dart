@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:msp_app/shared/entities/project.dart';
-import 'package:msp_app/features/project/presentation/pages/list_projects_page.dart';
 
 /// Projects Section - Hiển thị danh sách dự án
 class ProjectsSection extends StatelessWidget {
@@ -27,21 +26,7 @@ class ProjectsSection extends StatelessWidget {
             children: [
               const Text(
                 'Dự án của tôi',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ListProjectsPage(),
-                    ),
-                  );
-                },
-                child: const Text('Xem tất cả'),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -80,9 +65,14 @@ class ProjectsSection extends StatelessWidget {
                   children: [
                     Flexible(
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
-                          color: _getStatusColor(project.status).withValues(alpha: 0.1),
+                          color: _getStatusColor(
+                            project.status,
+                          ).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -113,10 +103,7 @@ class ProjectsSection extends StatelessWidget {
                 Flexible(
                   child: Text(
                     project.description,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -180,12 +167,18 @@ class ProjectsSection extends StatelessWidget {
   }
 
   int _getTotalTasksCount(Project project) {
-    return project.milestones.fold(0, (sum, milestone) => sum + milestone.tasks.length);
+    return project.milestones.fold(
+      0,
+      (sum, milestone) => sum + milestone.tasks.length,
+    );
   }
 
   int _getCompletedTasksCount(Project project) {
     return project.milestones.fold(0, (sum, milestone) {
-      return sum + milestone.tasks.where((task) => task.status.toLowerCase() == 'completed').length;
+      return sum +
+          milestone.tasks
+              .where((task) => task.status.toLowerCase() == 'completed')
+              .length;
     });
   }
 

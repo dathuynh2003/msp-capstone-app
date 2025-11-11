@@ -1,5 +1,5 @@
-import 'package:msp_app/shared/entities/user.dart';
+import '../entities/user_token_entity.dart';
 
 abstract class AuthRepository {
-  Future<User> login(String username, String password);
+  Future<UserTokenEntity> login(String email, String password);
 }

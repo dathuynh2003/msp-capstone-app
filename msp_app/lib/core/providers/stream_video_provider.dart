@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:stream_video_flutter/stream_video_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
-import '../services/auth_service.dart';
 
 /// Provider for Stream Video Client
 final streamVideoClientProvider = Provider<StreamVideo?>((ref) {
@@ -49,14 +48,14 @@ class _StreamVideoProviderState extends ConsumerState<StreamVideoProvider> {
         return;
       }
 
-      final currentUser = await AuthService.getCurrentUser();
-      if (currentUser == null) {
-        setState(() {
-          _isInitialized = true;
-          _error = 'User chưa đăng nhập';
-        });
-        return;
-      }
+      // final currentUser = await AuthService.getCurrentUser();
+      // if (currentUser == null) {
+      //   setState(() {
+      //     _isInitialized = true;
+      //     _error = 'User chưa đăng nhập';
+      //   });
+      //   return;
+      // }
 
       // final userToken = await _getUserTokenFromBackend(currentUser);
       // if (userToken == null) {
