@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'features/auth/presentation/widgets/auth_wrapper.dart';
 import 'features/auth/presentation/pages/login_page.dart';
-import 'features/home/presentation/pages/member_dashboard_page.dart';
+import 'features/home/presentation/pages/member_home_page.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
       home: const AuthWrapper(),
       routes: {
         '/login': (context) => const LoginPage(),
-        '/home': (context) => const MemberDashboardPage(),
+        '/home': (context) => const MemberHomePage(),
         // '/dashboard': (context) => const PMDashboardPage(),
       },
     );

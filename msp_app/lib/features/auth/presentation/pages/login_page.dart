@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:msp_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:msp_app/features/auth/presentation/widgets/auth_form.dart';
 import 'package:msp_app/features/auth/presentation/widgets/login_header.dart';
-import 'package:msp_app/features/home/presentation/pages/member_dashboard_page.dart';
+import 'package:msp_app/features/home/presentation/pages/member_home_page.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -38,7 +38,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           // Lấy token từ state.token.accessToken
           // Nếu muốn lấy user-info, cần thêm phần call lấy user sau login (nếu API trả luôn)
           // Demo: navigate theo role/fake
-          Widget destination = const MemberDashboardPage();
+          Widget destination = const MemberHomePage();
 
           if (mounted)
             Navigator.pushReplacement(
