@@ -1,10 +1,5 @@
-import 'package:stream_video_flutter/stream_video_flutter.dart';
+import 'package:msp_app/features/meeting/data/models/get_meeting_response.dart';
 
-/// Abstract repository interface for meeting operations
 abstract class MeetingRepository {
-  /// Get meeting by ID
-  Future<QueriedCall?> getMeetingById(String id);
-  
-  /// Get all meetings for current user
-  Future<List<QueriedCall>> getUserMeetings();
+  Future<List<GetMeetingResponse>> getMeetingsByUserId(String userId);
 }

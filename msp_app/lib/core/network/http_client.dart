@@ -13,4 +13,8 @@ class HttpClient {
   }) {
     return _client.post(url, headers: headers, body: body);
   }
+
+  static Future<http.Response> get(Uri url, {Map<String, String>? headers}) {
+    return _client.get(url, headers: headers);
+  }
 }

@@ -2,12 +2,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:msp_app/core/local/user_prefs.dart';
 
 class UserInfo {
+  final String userId;
   final String userName;
   final String email;
   final String role;
   final String avatarUrl;
 
   const UserInfo({
+    required this.userId,
     required this.userName,
     required this.email,
     required this.role,
@@ -15,6 +17,7 @@ class UserInfo {
   });
 
   factory UserInfo.empty() => const UserInfo(
+    userId: "",
     userName: "User",
     email: "user@example.com",
     role: "Member",
@@ -28,6 +31,7 @@ class UserProvider extends StateNotifier<UserInfo> {
   Future<void> loadFromPrefs() async {
     final info = await UserPrefs.getUser();
     state = UserInfo(
+      userId: info['userId'] ?? "",
       userName: info['fullName'] ?? "User",
       email: info['email'] ?? "user@example.com",
       role: info['role'] ?? "Member",

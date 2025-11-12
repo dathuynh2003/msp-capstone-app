@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:msp_app/features/home/presentation/widgets/home_card.dart';
+import 'package:msp_app/features/meeting/presentation/pages/meeting_list_page.dart';
 import 'package:msp_app/shared/widgets/member_drawer.dart';
 import 'package:msp_app/features/home/presentation/providers/user_provider.dart';
 import 'package:msp_app/core/local/user_prefs.dart';
@@ -111,7 +112,15 @@ class MemberHomePage extends ConsumerWidget {
                       HomeCard(
                         icon: Icons.calendar_month,
                         label: 'Meetings',
-                        onTap: () {},
+                        // onTap: () {},
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  MeetingListPage(userId: user.userId),
+                            ),
+                          );
+                        },
                       ),
                       HomeCard(
                         icon: Icons.newspaper,
