@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:msp_app/features/meeting/presentation/pages/pre_join_meeting_page.dart';
 import '../providers/meeting_provider.dart';
 import '../../data/models/get_meeting_response.dart';
 
@@ -269,7 +270,17 @@ class MeetingListPage extends ConsumerWidget {
                                           ),
                                         ),
                                         onPressed: () {
-                                          // TODO: Điều hướng sang phòng họp/video-call
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  PreJoinMeetingPage(
+                                                    meetingId: m.id,
+                                                    userId:
+                                                        userId, // hoặc lấy từ local user đang đăng nhập
+                                                  ),
+                                            ),
+                                          );
                                         },
                                       ),
                                     ),
