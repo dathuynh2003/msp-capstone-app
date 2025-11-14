@@ -28,36 +28,43 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
       final userMap = await UserPrefs.getUser();
       final accessToken = userMap['accessToken'];
 
+      // FIX: Đúng userId là email nếu React cũng dùng email
+      final userId = userMap['userId'] ?? '';
+      final userName = userMap['fullName'] ?? '';
+
       if (accessToken == null || accessToken.isEmpty) {
         await UserPrefs.clear();
         if (mounted) Navigator.pushReplacementNamed(context, '/login');
         return;
       }
-
-      // Nếu token hợp lệ
       if (!JwtDecoder.isExpired(accessToken)) {
         final role = userMap['role'];
-        // Set lại session auth cho app, như flow cũ
         ref.read(authProvider.notifier).setSessionFromPrefs(userMap);
 
-        // Lấy Stream token qua provider riverpod (đúng clean arch)
+        // Đúng token cho đúng userId/email
         final asyncToken = await ref.read(
           getStreamTokenProvider({
-            'userId': userMap['userId']!,
-            'userName': userMap['fullName'] ?? '',
+            'userId': userId,
+            'userName': userName,
             'imageUrl': userMap['avatarUrl'] ?? '',
           }).future,
         );
 
-        // Init StreamVideoService
+        print('---STREAM MOBILE DEBUG---');
+        print('userId: $userId');
+        print('userName: $userName');
+        print('userToken: $asyncToken');
+        print('apiKey: ${AppConstants.streamApiKey}');
+        print('-------------------------');
+
         StreamVideoService.init(
           apiKey: AppConstants.streamApiKey,
-          userId: userMap['userId']!,
+          userId: userId,
           userToken: asyncToken,
-          userName: userMap['fullName'] ?? '',
+          userName: userName,
+          imageUrl: userMap['avatarUrl'],
         );
 
-        // Điều hướng như cũ
         if (mounted) {
           if (role == "Member") {
             Navigator.pushReplacementNamed(context, '/home');
@@ -71,7 +78,8 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
         await UserPrefs.clear();
         if (mounted) Navigator.pushReplacementNamed(context, '/login');
       }
-    } catch (e) {
+    } catch (e, stack) {
+      print('GET STREAM TOKEN ERROR: $e\n$stack');
       setState(() {
         _error = 'Lỗi auth: $e';
         _loading = false;
@@ -84,7 +92,6 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
     if (_loading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    // Nếu có lỗi
     return Scaffold(body: Center(child: Text(_error ?? 'Lỗi không xác định')));
   }
 }

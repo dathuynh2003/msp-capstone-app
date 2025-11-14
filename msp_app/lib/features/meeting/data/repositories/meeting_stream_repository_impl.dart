@@ -7,7 +7,15 @@ class MeetingStreamRepositoryImpl implements MeetingStreamRepository {
   MeetingStreamRepositoryImpl(this.datasource);
 
   @override
-  Future<Call> joinCall(String callId) {
-    return datasource.joinCall(callId);
+  Future<Call> joinCall(String callId) async {
+    print('[MeetingStreamRepositoryImpl] joinCall: callId=$callId');
+    try {
+      final call = await datasource.joinCall(callId);
+      print('[MeetingStreamRepositoryImpl] joinCall SUCCESS');
+      return call;
+    } catch (e, stack) {
+      print('[MeetingStreamRepositoryImpl] ERROR: $e\n$stack');
+      rethrow;
+    }
   }
 }
