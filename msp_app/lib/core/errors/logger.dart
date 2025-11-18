@@ -1,5 +1,6 @@
 class Logger {
   static void log(String msg) {
-    print("[LOG]: $msg");
+    // ignore: avoid_print
+    print(msg);
   }
 }

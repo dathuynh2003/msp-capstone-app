@@ -4,40 +4,48 @@ class MeetingStreamDatasource {
   Future<Call> joinCall(String callId) async {
     print('[MeetingStreamDatasource] joinCall: callId=$callId');
     try {
+      final user = StreamVideo.instance.currentUser;
+      print('[MeetingStreamDatasource] Current user: ${user.id}');
+
       final call = StreamVideo.instance.makeCall(
         callType: StreamCallType.defaultType(),
         id: callId,
       );
-      print('[MeetingStreamDatasource] Call created: ${call.id}');
 
-      // Step 1: getOrCreate() để join hoặc tạo call nếu chưa tồn tại
       await call.getOrCreate();
       print('[MeetingStreamDatasource] getOrCreate SUCCESS');
 
-      // Step 2: Join call để activate nó
       await call.join();
       print('[MeetingStreamDatasource] call.join() SUCCESS');
 
-      // Lấy call state bằng .value
-      final callState = call.state.value;
-      print('[MeetingStreamDatasource] Call status: ${callState.status}');
-      print(
-        '[MeetingStreamDatasource] Call createdById: ${callState.createdByUserId}',
-      );
-      print(
-        '[MeetingStreamDatasource] Participants count: ${callState.callParticipants.length}',
-      );
-
-      // In ra từng participant
-      for (var participant in callState.callParticipants) {
+      // Đợi cho đến khi có participants hoặc timeout
+      int attempt = 0;
+      while (attempt < 10) {
+        final callState = call.state.value;
         print(
-          '[MeetingStreamDatasource] Participant: ${participant.userId} - ${participant.name}',
+          '[MeetingStreamDatasource] Attempt ${attempt + 1}: Status=${callState.status}, Participants=${callState.callParticipants.length}',
         );
+
+        if (callState.callParticipants.isNotEmpty) {
+          print('[MeetingStreamDatasource] Found participants!');
+          break;
+        }
+
+        attempt++;
+        if (attempt < 10) {
+          await Future.delayed(const Duration(milliseconds: 500));
+        }
       }
 
+      final callState = call.state.value;
+      print('[MeetingStreamDatasource] Final Status: ${callState.status}');
       print(
-        '[MeetingStreamDatasource] Own userId: ${StreamVideo.instance.currentUser?.id}',
+        '[MeetingStreamDatasource] Final Participants: ${callState.callParticipants.length}',
       );
+
+      for (var p in callState.callParticipants) {
+        print('[MeetingStreamDatasource] - ${p.userId}: ${p.name}');
+      }
 
       return call;
     } catch (e, stack) {
