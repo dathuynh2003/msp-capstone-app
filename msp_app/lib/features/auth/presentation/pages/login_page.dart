@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:msp_app/features/auth/presentation/providers/auth_provider.dart';
-import 'package:msp_app/features/auth/presentation/widgets/auth_form.dart';
-import 'package:msp_app/features/auth/presentation/widgets/login_header.dart';
 import 'package:msp_app/features/home/presentation/pages/member_home_page.dart';
+
+const Color orangeDeep = Color(0xFFFF5E13);
+const Color orangeLight = Color(0xFFFFDBBD);
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -13,122 +14,229 @@ class LoginPage extends ConsumerStatefulWidget {
 }
 
 class _LoginPageState extends ConsumerState<LoginPage> {
-  bool _isLogin = true;
+  final _emailCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
   bool _rememberMe = false;
+  String? _error;
 
-  //sử dụng Riverpod provider
-  void _onSubmit(String email, String password, String? companyName) async {
-    if (_isLogin) {
-      // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(child: CircularProgressIndicator()),
-      );
+  void _login() async {
+    setState(() => _error = null);
+    FocusScope.of(context).unfocus();
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+    try {
+      await ref
+          .read(authProvider.notifier)
+          .login(_emailCtrl.text.trim(), _passwordCtrl.text);
+      if (mounted) Navigator.pop(context);
 
-      try {
-        await ref.read(authProvider.notifier).login(email, password);
-
-        // Hide loading indicator
-        if (mounted) Navigator.pop(context);
-
-        final state = ref.read(authProvider);
-
-        if (state.token != null) {
-          // Lấy token từ state.token.accessToken
-          // Nếu muốn lấy user-info, cần thêm phần call lấy user sau login (nếu API trả luôn)
-          // Demo: navigate theo role/fake
-          Widget destination = const MemberHomePage();
-
-          if (mounted)
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => destination),
-            );
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Đăng nhập thành công!'),
-              backgroundColor: Colors.green,
-              action: SnackBarAction(
-                label: 'Xem Token',
-                textColor: Colors.white,
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('JWT Token'),
-                      content: SelectableText(
-                        state.token!.accessToken,
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontFamily: 'monospace',
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('Đóng'),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-          );
-        } else {
-          // Show error
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.error ?? 'Đăng nhập thất bại'),
-              backgroundColor: Colors.red,
-            ),
+      final state = ref.read(authProvider);
+      if (state.token != null) {
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const MemberHomePage()),
           );
         }
-      } catch (e) {
-        if (mounted) Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi đăng nhập: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+      } else {
+        setState(() => _error = state.error ?? 'Login failed');
       }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Tài khoản đã được tạo! Vui lòng đăng nhập."),
-        ),
-      );
-      setState(() => _isLogin = true);
+    } catch (e) {
+      if (mounted) Navigator.pop(context);
+      setState(() => _error = 'Login error: $e');
     }
   }
+
+  void _loginWithGoogle() async {
+    setState(() => _error = null);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Tính năng Google chưa implement!'),
+        backgroundColor: Colors.orange,
+      ),
+    );
+  }
+
+  Widget _buildLoginHeader() => Column(
+    children: [
+      const SizedBox(height: 38),
+      CircleAvatar(
+        radius: 40,
+        backgroundColor: orangeLight,
+        child: Icon(
+          Icons.supervised_user_circle_outlined,
+          color: orangeDeep,
+          size: 48,
+        ),
+      ),
+      const SizedBox(height: 21),
+      Text(
+        'Welcome to\nAI Meeting Platform',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 23,
+          color: orangeDeep,
+          letterSpacing: 1,
+        ),
+      ),
+      const SizedBox(height: 11),
+      Text(
+        'Sign in to continue',
+        style: TextStyle(color: Colors.black54, fontSize: 15),
+      ),
+      const SizedBox(height: 18),
+    ],
+  );
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
+            colors: [orangeLight, Colors.white],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFFFDF0D2), Color(0xFFF9F4EE)],
           ),
         ),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              const LoginHeader(),
-              AuthForm(
-                isLogin: _isLogin,
-                rememberMe: _rememberMe,
-                onRememberMeChanged: (val) => setState(() => _rememberMe = val),
-                onSubmit: _onSubmit,
-                onSwitchMode: () => setState(() => _isLogin = !_isLogin),
-              ),
-              const SizedBox(height: 20),
-            ],
+        child: Center(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                _buildLoginHeader(),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 22),
+                  child: Card(
+                    elevation: 7,
+                    color: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 32,
+                        horizontal: 24,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          TextField(
+                            controller: _emailCtrl,
+                            keyboardType: TextInputType.emailAddress,
+                            decoration: const InputDecoration(
+                              labelText: 'Email',
+                              prefixIcon: Icon(Icons.email_outlined),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          TextField(
+                            controller: _passwordCtrl,
+                            obscureText: true,
+                            decoration: const InputDecoration(
+                              labelText: 'Password',
+                              prefixIcon: Icon(Icons.lock_outline),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 11),
+                          Row(
+                            children: [
+                              Checkbox(
+                                value: _rememberMe,
+                                activeColor: orangeDeep,
+                                onChanged: (val) =>
+                                    setState(() => _rememberMe = val ?? false),
+                              ),
+                              const Text(
+                                'Remember me',
+                                style: TextStyle(fontSize: 13),
+                              ),
+                            ],
+                          ),
+                          if (_error != null) ...[
+                            const SizedBox(height: 10),
+                            Text(
+                              _error!,
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                          const SizedBox(height: 18),
+                          SizedBox(
+                            height: 52,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: orangeDeep,
+                                elevation: 6,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                              ),
+                              onPressed: _login,
+                              child: const Text(
+                                'Đăng nhập',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 17,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 13),
+                          SizedBox(
+                            height: 48,
+                            child: OutlinedButton.icon(
+                              icon: Image.asset(
+                                'assets/google.png',
+                                width: 24,
+                                height: 24,
+                              ), // Google logo PNG nhỏ
+                              label: const Text(
+                                'Đăng nhập với Google',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.black87,
+                                backgroundColor: Colors.white,
+                                side: BorderSide(color: orangeDeep, width: 1.6),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                              ),
+                              onPressed: _loginWithGoogle,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 38),
+              ],
+            ),
           ),
         ),
       ),

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../widgets/meeting_card.dart';
-import '../providers/meeting_provider.dart'; // Đường dẫn này sửa tùy cấu trúc project
+import '../providers/meeting_provider.dart';
 import '../../data/models/get_meeting_response.dart';
 
 const Color orangeDeep = Color(0xFFFF5E13);
