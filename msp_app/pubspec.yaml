@@ -41,6 +41,9 @@ dependencies:
   stream_video_flutter: 0.11.0
   stream_video_push_notification: 0.11.0
 
+  # Marquee
+  marquee: ^2.3.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
