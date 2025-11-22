@@ -88,7 +88,7 @@ class FolderProjectCard extends StatelessWidget {
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: color,
-                                    fontSize: 16,
+                                    fontSize: 14,
                                     letterSpacing: 0.1,
                                   ),
                                   maxLines: 1,

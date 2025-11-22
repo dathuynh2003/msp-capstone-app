@@ -354,7 +354,7 @@ class _JoinMeetingPageState extends ConsumerState<JoinMeetingPage> {
 
         // Stop service if operation failed
         if (Theme.of(context).platform == TargetPlatform.android &&
-            (result?.isFailure ?? false)) {
+            (result.isFailure)) {
           await BackgroundServiceHelper.stopScreenShare(_call!);
 
           if (mounted) {

@@ -69,7 +69,7 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
           if (role == "Member") {
             Navigator.pushReplacementNamed(context, '/home');
           } else if (role == "ProjectManager") {
-            Navigator.pushReplacementNamed(context, '/dashboard');
+            Navigator.pushReplacementNamed(context, '/home');
           } else {
             Navigator.pushReplacementNamed(context, '/home');
           }

@@ -21,8 +21,8 @@ class HomeCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         onTap: onTap,
         child: SizedBox(
-          width: 140,
-          height: 120,
+          width: 120,
+          height: 100,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

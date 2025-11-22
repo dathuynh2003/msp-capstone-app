@@ -5,14 +5,16 @@ import 'package:intl/intl.dart';
 import '../widgets/meeting_card.dart';
 import '../providers/meeting_provider.dart';
 import '../../data/models/get_meeting_response.dart';
+import '../widgets/meeting_filter_sheet.dart';
+import '../widgets/meeting_filter_bar.dart';
 
-const Color orangeDeep = Color(0xFFFF5E13);
+// ---- Palette ----
+const Color orangeDeep = Color(0xFFFFA463);
 const Color orangeGold = Color(0xFFFDF0D2);
 const Color whiteGray = Color(0xFFF9F4EE);
 
 class MeetingListPage extends ConsumerWidget {
   final String userId;
-
   const MeetingListPage({super.key, required this.userId});
 
   String _formatTime(DateTime? time) {
@@ -43,23 +45,51 @@ class MeetingListPage extends ConsumerWidget {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: orangeDeep,
         elevation: 0,
-        title: ShaderMask(
-          shaderCallback: (rect) => LinearGradient(
-            colors: [orangeDeep, orangeDeep],
-          ).createShader(rect),
-          child: const Text(
-            'Danh sách cuộc họp',
-            style: TextStyle(
-              color: whiteGray,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
-            ),
+        title: Text(
+          'Danh sách cuộc họp',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1,
+            fontSize: 18,
+            color: Colors.white,
           ),
         ),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.chevron_left_outlined,
+            size: 32,
+            color: Colors.white,
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+          splashRadius: 22,
+          tooltip: "Trở về",
+        ),
         actions: [
-          // Filter button giữ nguyên
+          IconButton(
+            icon: const Icon(Icons.filter_list, color: Colors.white),
+            tooltip: 'Lọc cuộc họp',
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                builder: (_) => MeetingFilterSheet(
+                  initStatus: selectedStatus,
+                  initDate: selectedDate,
+                  onStatus: (status) =>
+                      ref.read(meetingStatusFilterProvider.notifier).state =
+                          status,
+                  onDate: (date) =>
+                      ref.read(meetingDateFilterProvider.notifier).state = date,
+                  onConfirm: () => Navigator.of(context).pop(),
+                ),
+              );
+            },
+          ),
         ],
       ),
       body: Container(
@@ -73,6 +103,19 @@ class MeetingListPage extends ConsumerWidget {
         child: SafeArea(
           child: Column(
             children: [
+              // FILTER BAR
+              MeetingFilterBar(
+                selectedStatus: selectedStatus,
+                selectedDate: selectedDate,
+                clearAll: () {
+                  ref.read(meetingStatusFilterProvider.notifier).state = null;
+                  ref.read(meetingDateFilterProvider.notifier).state = null;
+                },
+                clearStatus: () =>
+                    ref.read(meetingStatusFilterProvider.notifier).state = null,
+                clearDate: () =>
+                    ref.read(meetingDateFilterProvider.notifier).state = null,
+              ),
               Expanded(
                 child: meetingsAsync.when(
                   data: (meetings) {

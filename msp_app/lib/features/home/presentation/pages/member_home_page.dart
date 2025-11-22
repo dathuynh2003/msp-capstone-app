@@ -9,6 +9,7 @@ import 'package:msp_app/core/local/user_prefs.dart';
 import '../../../auth/presentation/pages/login_page.dart';
 import '../../presentation/providers/project_provider.dart';
 import '../../presentation/widgets/folder_project_card.dart';
+import 'package:msp_app/features/project/presentation/pages/project_detail_page.dart';
 
 // Palette demo
 const Color orangeDeep = Color(0xFFFFA463);
@@ -89,7 +90,7 @@ class MemberHomePage extends ConsumerWidget {
                     label: 'Notifications',
                     onTap: () {},
                   ),
-                  SizedBox(width: 14),
+                  SizedBox(width: 10),
                   HomeCard(
                     icon: Icons.calendar_month,
                     label: 'Meetings',
@@ -101,7 +102,7 @@ class MemberHomePage extends ConsumerWidget {
                       );
                     },
                   ),
-                  SizedBox(width: 14),
+                  SizedBox(width: 10),
                   HomeCard(
                     icon: Icons.folder_special_rounded,
                     label: 'Projects',
@@ -147,6 +148,10 @@ class MemberHomePage extends ConsumerWidget {
                 ],
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Divider(height: 1, thickness: 1, color: Colors.grey[500]),
+            ),
 
             const SizedBox(height: 8),
             Expanded(
@@ -167,7 +172,13 @@ class MemberHomePage extends ConsumerWidget {
                       endDate: project.endDate,
                       color: orangeDeep,
                       onTap: () {
-                        // Xử lý chuyển màn chi tiết nếu cần
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => ProjectDetailPage(
+                              projectId: project.id,
+                            ), // project.id hoặc project.projectId
+                          ),
+                        );
                       },
                     );
                   },

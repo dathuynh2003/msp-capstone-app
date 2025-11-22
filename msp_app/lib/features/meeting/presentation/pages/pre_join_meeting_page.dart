@@ -69,8 +69,8 @@ class _PreJoinMeetingPageState extends State<PreJoinMeetingPage> {
               ),
               const SizedBox(height: 18),
               Container(
-                height: 320, // Cho rộng hơn
-                width: 320,
+                height: 420, // Cho rộng hơn
+                width: 380,
                 decoration: BoxDecoration(
                   color: Colors.grey[300],
                   borderRadius: BorderRadius.circular(24),
@@ -83,7 +83,7 @@ class _PreJoinMeetingPageState extends State<PreJoinMeetingPage> {
                           fit: BoxFit.cover,
                           child: SizedBox(
                             height: 340,
-                            width: 340,
+                            width: 320,
                             child: StreamLobbyVideo(call: call),
                           ),
                         ),
