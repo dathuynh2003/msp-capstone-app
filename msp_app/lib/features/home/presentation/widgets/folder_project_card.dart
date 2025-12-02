@@ -105,7 +105,7 @@ class FolderProjectCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Mô tả: ',
+                              'Description: ',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black87,
@@ -151,7 +151,7 @@ class FolderProjectCard extends StatelessWidget {
                     Row(
                       children: [
                         Text(
-                          'Thời gian: ',
+                          'Timeline: ',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.black87,

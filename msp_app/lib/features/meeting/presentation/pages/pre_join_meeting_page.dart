@@ -64,7 +64,7 @@ class _PreJoinMeetingPageState extends State<PreJoinMeetingPage> {
               Icon(Icons.groups_rounded, size: 60, color: Colors.blue.shade400),
               const SizedBox(height: 18),
               const Text(
-                "Chuẩn bị vào phòng họp",
+                "Prepare to Join Meeting",
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 23),
               ),
               const SizedBox(height: 18),
@@ -98,8 +98,8 @@ class _PreJoinMeetingPageState extends State<PreJoinMeetingPage> {
                           ),
                           Text(
                             camGranted
-                                ? "Đang kiểm tra thiết bị"
-                                : "Chưa cấp quyền camera/mic",
+                                ? "Checking devices"
+                                : "Camera/mic permission not granted",
                             style: TextStyle(color: Colors.grey, fontSize: 16),
                           ),
                         ],
@@ -110,7 +110,7 @@ class _PreJoinMeetingPageState extends State<PreJoinMeetingPage> {
                 width: 260,
                 child: ElevatedButton.icon(
                   icon: const Icon(Icons.video_call_rounded),
-                  label: const Text("Vào phòng họp"),
+                  label: const Text("Join Meeting"),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     foregroundColor: Colors.white,

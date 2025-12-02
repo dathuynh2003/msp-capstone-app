@@ -91,7 +91,7 @@ class _JoinMeetingPageState extends ConsumerState<JoinMeetingPage> {
               CircularProgressIndicator(color: Colors.white),
               SizedBox(height: 16),
               Text(
-                'Đang kết nối...',
+                'Connecting...',
                 style: TextStyle(color: Colors.white, fontSize: 16),
               ),
             ],
@@ -110,7 +110,7 @@ class _JoinMeetingPageState extends ConsumerState<JoinMeetingPage> {
               Icon(Icons.error_outline, size: 48, color: Colors.red),
               const SizedBox(height: 12),
               Text(
-                'Lỗi khi vào phòng',
+                'Error joining the room',
                 style: const TextStyle(
                   fontSize: 18,
                   color: Colors.white,
@@ -119,14 +119,14 @@ class _JoinMeetingPageState extends ConsumerState<JoinMeetingPage> {
               ),
               const SizedBox(height: 8),
               Text(
-                _error ?? 'Lỗi không xác định',
+                _error ?? 'Unknown error',
                 style: const TextStyle(fontSize: 14, color: Colors.grey),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
               ElevatedButton.icon(
                 icon: const Icon(Icons.arrow_back),
-                label: const Text("Quay về"),
+                label: const Text("Go back"),
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ],
@@ -276,7 +276,7 @@ class _JoinMeetingPageState extends ConsumerState<JoinMeetingPage> {
                             const SizedBox(width: 16),
                             _buildControlButton(
                               icon: Icons.call_end,
-                              label: 'Kết thúc',
+                              label: 'End Meeting',
                               isEndCall: true,
                               onPressed: () async {
                                 // ✅ Clean up before ending
@@ -334,7 +334,7 @@ class _JoinMeetingPageState extends ConsumerState<JoinMeetingPage> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Đã có người đang chia sẻ màn hình'),
+                content: Text('Someone is already sharing the screen'),
                 backgroundColor: Colors.orange,
               ),
             );
@@ -359,9 +359,7 @@ class _JoinMeetingPageState extends ConsumerState<JoinMeetingPage> {
 
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Không thể bắt đầu chia sẻ màn hình'),
-              ),
+              const SnackBar(content: Text('Cannot start screen sharing')),
             );
           }
         }
@@ -377,7 +375,7 @@ class _JoinMeetingPageState extends ConsumerState<JoinMeetingPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Không thể chia sẻ màn hình')));
+        ).showSnackBar(SnackBar(content: Text('Cannot share screen')));
       }
       return;
     }

@@ -36,7 +36,7 @@ class MeetingFilterBar extends StatelessWidget {
           const Spacer(),
           IconButton(
             icon: const Icon(Icons.clear),
-            tooltip: 'Bỏ lọc',
+            tooltip: 'Clear filters',
             onPressed: clearAll,
           ),
         ],

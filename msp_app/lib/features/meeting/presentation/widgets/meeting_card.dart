@@ -128,7 +128,7 @@ class MeetingCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              'Mô tả: ${meeting.description?.isNotEmpty ?? false ? meeting.description! : '(Không có mô tả)'}',
+              'Description: ${meeting.description?.isNotEmpty ?? false ? meeting.description! : '(No description)'}',
               style: const TextStyle(
                 color: Colors.black54,
                 fontStyle: FontStyle.italic,
@@ -164,7 +164,7 @@ class MeetingCard extends StatelessWidget {
               children: [
                 _iconLabel(
                   Icons.folder,
-                  "Dự án: ${meeting.projectName}",
+                  "Project: ${meeting.projectName}",
                   orangeDeep,
                 ),
                 if (meeting.milestoneName != null &&
@@ -176,7 +176,7 @@ class MeetingCard extends StatelessWidget {
                   ),
                 _iconLabel(
                   Icons.people,
-                  "Tham gia: ${meeting.attendees.length}",
+                  "Attendees: ${meeting.attendees.length}",
                   orangeDeep,
                 ),
               ],
@@ -187,7 +187,7 @@ class MeetingCard extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.only(top: 10),
                   child: GlowingButton(
-                    text: "Tham gia",
+                    text: "Join",
                     icon: Icons.video_call,
                     onTap: () {
                       Navigator.push(

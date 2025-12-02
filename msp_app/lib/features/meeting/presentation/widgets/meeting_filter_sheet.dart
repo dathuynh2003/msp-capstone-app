@@ -40,18 +40,15 @@ class _MeetingFilterSheetState extends State<MeetingFilterSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Lọc theo',
+            'Filter by',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
           ),
           const SizedBox(height: 20),
-          const Text(
-            'Trạng thái:',
-            style: TextStyle(fontWeight: FontWeight.w600),
-          ),
+          const Text('Status:', style: TextStyle(fontWeight: FontWeight.w600)),
           DropdownButton<String>(
             value: tempStatus,
             isExpanded: true,
-            hint: const Text('Tất cả'),
+            hint: const Text('All'),
             items: [
               'Scheduled',
               'Ongoing',
@@ -61,7 +58,7 @@ class _MeetingFilterSheetState extends State<MeetingFilterSheet> {
             onChanged: (val) => setState(() => tempStatus = val),
           ),
           const SizedBox(height: 16),
-          const Text('Ngày:', style: TextStyle(fontWeight: FontWeight.w600)),
+          const Text('Date:', style: TextStyle(fontWeight: FontWeight.w600)),
           Row(
             children: [
               Expanded(
@@ -72,7 +69,7 @@ class _MeetingFilterSheetState extends State<MeetingFilterSheet> {
                     child: Text(
                       tempDate != null
                           ? DateFormat('dd/MM/yyyy').format(tempDate!)
-                          : 'Chọn ngày',
+                          : 'Select date',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -133,7 +130,7 @@ class _MeetingFilterSheetState extends State<MeetingFilterSheet> {
                     padding: const EdgeInsets.symmetric(vertical: 13),
                   ),
                   child: const Text(
-                    'Xác nhận',
+                    'Confirm',
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ),

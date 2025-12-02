@@ -61,10 +61,8 @@ class ProjectDetailPage extends ConsumerWidget {
         ),
       ),
       body: asyncDetail.when(
-        data: (detail) => ProjectDetailContent(
-          project: detail,
-          onRefresh: refresh, // TRUYỀN CALLBACK VÀO ĐÂY
-        ),
+        data: (detail) =>
+            ProjectDetailContent(project: detail, onRefresh: refresh),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => Center(
           child: Text(

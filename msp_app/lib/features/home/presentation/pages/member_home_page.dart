@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:msp_app/features/home/domain/params/project_query_param.dart';
 import 'package:msp_app/features/home/presentation/widgets/home_card.dart';
 import 'package:msp_app/features/meeting/presentation/pages/meeting_list_page.dart';
+import 'package:msp_app/features/project/presentation/pages/project_list_page.dart';
 import 'package:msp_app/shared/widgets/member_drawer.dart';
 import 'package:msp_app/features/home/presentation/providers/user_provider.dart';
 import 'package:msp_app/core/local/user_prefs.dart';
@@ -106,7 +107,13 @@ class MemberHomePage extends ConsumerWidget {
                   HomeCard(
                     icon: Icons.folder_special_rounded,
                     label: 'Projects',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const ProjectListPage(),
+                        ),
+                      );
+                    },
                   ),
                   // Nếu muốn thêm action, thêm tại đây
                 ],
@@ -131,7 +138,7 @@ class MemberHomePage extends ConsumerWidget {
                   ),
                   IconButton(
                     icon: const Icon(Icons.refresh, color: orangeDeep),
-                    tooltip: 'Làm mới danh sách dự án',
+                    tooltip: 'Refresh project list',
                     onPressed: () {
                       final user = ref.read(userProvider);
                       ref.invalidate(

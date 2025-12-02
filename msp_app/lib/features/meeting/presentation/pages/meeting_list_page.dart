@@ -48,7 +48,7 @@ class MeetingListPage extends ConsumerWidget {
         backgroundColor: orangeDeep,
         elevation: 0,
         title: Text(
-          'Danh sách cuộc họp',
+          'Meeting List',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             letterSpacing: 1,
@@ -65,12 +65,12 @@ class MeetingListPage extends ConsumerWidget {
           ),
           onPressed: () => Navigator.of(context).pop(),
           splashRadius: 22,
-          tooltip: "Trở về",
+          tooltip: "Back",
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list, color: Colors.white),
-            tooltip: 'Lọc cuộc họp',
+            tooltip: 'Filter meetings',
             onPressed: () {
               showModalBottomSheet(
                 context: context,
@@ -136,7 +136,7 @@ class MeetingListPage extends ConsumerWidget {
                     if (filtered.isEmpty) {
                       return const Center(
                         child: Text(
-                          "Không có cuộc họp nào khớp bộ lọc",
+                          "No meetings match the filters.",
                           style: TextStyle(
                             color: Colors.black54,
                             fontSize: 17,
@@ -164,7 +164,7 @@ class MeetingListPage extends ConsumerWidget {
                               ? _formatTime(
                                   m.endTime!.add(const Duration(hours: 7)),
                                 )
-                              : "chưa xác định";
+                              : "not determined";
                           final dateStr = _formatDate(m.startTime);
                           final canJoin = _canJoin(m);
 
@@ -193,7 +193,7 @@ class MeetingListPage extends ConsumerWidget {
                         const SizedBox(height: 220),
                         Center(
                           child: Text(
-                            'Lỗi: $err',
+                            'Error: $err',
                             style: const TextStyle(
                               color: Colors.red,
                               fontSize: 16,

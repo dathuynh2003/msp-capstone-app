@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:msp_app/features/project/data/models/project_detail_response.dart';
 
-// Widget hiện chi tiết project (nội dung nổi, các card task cũng nổi + border)
 class ProjectDetailContent extends StatelessWidget {
   final ProjectDetailResponse project;
   final Future<void> Function()? onRefresh;
@@ -12,7 +11,6 @@ class ProjectDetailContent extends StatelessWidget {
     this.onRefresh,
   });
 
-  // Lấy initials từ tên
   String initials(String name) {
     final parts = name.trim().split(RegExp(r'\s+'));
     if (parts.isEmpty) return "";
@@ -20,7 +18,6 @@ class ProjectDetailContent extends StatelessWidget {
     return (parts[0][0] + parts.last[0]).toUpperCase();
   }
 
-  // Format ISO date -> dd/MM/yyyy
   String? formatDate(String? dt) {
     if (dt == null || dt.isEmpty) return "";
     try {
@@ -31,46 +28,66 @@ class ProjectDetailContent extends StatelessWidget {
     }
   }
 
+  // Helper: lấy màu status badge
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return Colors.green;
+      case 'inprogress':
+        return Colors.blue;
+      case 'pending':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    // Hiển thị các member avatars max 3 + "+n"
     List<Widget> assigneeAvatars = [];
     final showAvatars = project.members.take(3).toList();
+
     for (final m in showAvatars) {
       assigneeAvatars.add(
         Padding(
           padding: const EdgeInsets.only(right: 4),
           child: (m.avatarUrl.isNotEmpty)
               ? CircleAvatar(
-                  radius: 14,
+                  radius: 16,
                   backgroundImage: NetworkImage(m.avatarUrl),
+                  backgroundColor: Colors.grey[200],
                 )
               : CircleAvatar(
-                  radius: 14,
+                  radius: 16,
                   backgroundColor: Colors.deepPurple[100],
                   child: Text(
                     initials(m.fullName),
                     style: const TextStyle(
                       color: Color(0xFF232062),
                       fontWeight: FontWeight.bold,
-                      fontSize: 13,
+                      fontSize: 12,
                     ),
                   ),
                 ),
         ),
       );
     }
+
     if (project.members.length > 3) {
       assigneeAvatars.add(
         Padding(
           padding: const EdgeInsets.only(right: 4),
           child: CircleAvatar(
-            radius: 14,
+            radius: 16,
             backgroundColor: Colors.grey[300],
             child: Text(
               '+${project.members.length - 3}',
-              style: const TextStyle(fontSize: 13, color: Colors.black),
+              style: const TextStyle(
+                fontSize: 11,
+                color: Colors.black87,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ),
@@ -79,269 +96,457 @@ class ProjectDetailContent extends StatelessWidget {
 
     return RefreshIndicator(
       onRefresh: onRefresh ?? () async {},
+      color: const Color(0xFFFFA463),
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.10),
-              blurRadius: 18,
-              spreadRadius: 8,
-              offset: const Offset(0, 8),
-            ),
-          ],
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.grey[50]!, Colors.white, Colors.grey[50]!],
+          ),
         ),
         child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
           children: [
-            // Project title
-            Text(
-              project.name,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-                color: Color(0xFF232062),
+            // PROJECT HEADER CARD
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFFFA463), Color(0xFFCC7A2B)],
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFFA463).withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 4),
-            if (project.description != null &&
-                project.description!.trim().isNotEmpty)
-              Text(
-                project.description!,
-                style: const TextStyle(color: Colors.black54, fontSize: 14),
-              ),
-            const SizedBox(height: 18),
-
-            // Assignees + Due date row
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Members
-                Expanded(
-                  flex: 7,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      const Text(
-                        'Members',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w500,
-                          color: Colors.grey,
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.folder_special,
+                          color: Colors.white,
+                          size: 28,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Row(children: assigneeAvatars),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Text(
+                          project.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 22,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                ),
-                // Due date
-                Expanded(
-                  flex: 9,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                  if (project.description != null &&
+                      project.description!.trim().isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      project.description!,
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 14,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 20),
+                  Row(
                     children: [
-                      const Text(
-                        'Due date      ',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w500,
-                          color: Colors.grey,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'MEMBERS',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white.withOpacity(0.7),
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(spacing: 4, children: assigneeAvatars),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        formatDate(project.endDate) ?? "",
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Colors.red,
-                        ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            'DUE DATE',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white.withOpacity(0.7),
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.calendar_today,
+                                  color: Colors.white,
+                                  size: 14,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  formatDate(project.endDate) ?? "N/A",
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ],
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 28),
+
+            // TASKS HEADER
+            Row(
+              children: [
+                Container(
+                  width: 4,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFA463),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                const Text(
+                  'Tasks',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFA463).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${project.tasks.length}',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFFFFA463),
+                    ),
                   ),
                 ),
               ],
             ),
 
-            const SizedBox(height: 18),
-            const Divider(height: 2, thickness: 1.1),
-            const SizedBox(height: 7),
+            const SizedBox(height: 16),
 
             // TASKS LIST
-            ...project.tasks.map((task) {
-              // Xử lý flag, note
-              DateTime? endDate;
-              try {
-                endDate = task.endDate != null
-                    ? DateTime.parse(task.endDate!)
-                    : null;
-              } catch (_) {}
-              final _status = (task.status).trim().toLowerCase();
-              final bool showFlag = _status != "completed";
-              Widget? flag;
-              String? note;
-              Color flagColor = Colors.grey;
-              Color? labelColor;
-
-              if (showFlag && endDate != null) {
-                if (now.isAfter(endDate)) {
-                  flagColor = Colors.redAccent;
-                  note = "Overdue";
-                  labelColor = Colors.redAccent;
-                  flag = Container(
-                    padding: const EdgeInsets.all(3.4),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Colors.redAccent.shade100,
-                        width: 2,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.redAccent.withOpacity(0.12),
-                          blurRadius: 6,
-                        ),
-                      ],
-                    ),
-                    child: Icon(Icons.flag_rounded, color: flagColor, size: 18),
-                  );
-                } else {
-                  final remaining = endDate.difference(now);
-                  if (remaining.inDays >= 1) {
-                    note = "${remaining.inDays} days left";
-                  } else {
-                    final hoursLeft = remaining.inHours < 1
-                        ? 1
-                        : (remaining.inHours + 1);
-                    note = "$hoursLeft hours left";
-                  }
-                  flagColor = Colors.grey;
-                  labelColor = Colors.grey[700];
-                  flag = Container(
-                    padding: const EdgeInsets.all(3.4),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.grey.shade400, width: 2),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.10),
-                          blurRadius: 5,
-                        ),
-                      ],
-                    ),
-                    child: Icon(Icons.flag_rounded, color: flagColor, size: 18),
-                  );
-                }
-              }
-
-              // Avatars nhóm người làm task này (một người)
-              List<Widget> memberAvatars = [];
-              if (task.assignee != null) {
-                if (task.assignee!.avatarUrl.isNotEmpty) {
-                  memberAvatars.add(
-                    CircleAvatar(
-                      radius: 14,
-                      backgroundImage: NetworkImage(task.assignee!.avatarUrl),
-                    ),
-                  );
-                } else {
-                  memberAvatars.add(
-                    CircleAvatar(
-                      radius: 14,
-                      backgroundColor: Colors.deepOrange[100],
-                      child: Text(
-                        initials(task.assignee!.fullName),
-                        style: const TextStyle(
-                          color: Color(0xFF232062),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  );
-                }
-              }
-              // Nếu muốn nhiều người thêm vào list này...
-
-              return Container(
-                margin: const EdgeInsets.symmetric(vertical: 8),
-                padding: const EdgeInsets.symmetric(
-                  vertical: 9,
-                  horizontal: 12,
-                ),
+            if (project.tasks.isEmpty)
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 30),
+                padding: const EdgeInsets.all(40),
                 decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  border: Border.all(
-                    color: Colors.black.withOpacity(0.19),
-                    width: 1.3,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.10),
-                      blurRadius: 14,
-                      spreadRadius: 2,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.grey[200]!, width: 2),
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Dòng trên: title, flag, note
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            task.title,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                              color: Color(0xFF232062),
-                            ),
-                          ),
-                        ),
-                        if (flag != null) flag,
-                        if (flag != null) const SizedBox(width: 7),
-                        if (note != null)
-                          Text(
-                            note,
-                            style: TextStyle(
-                              color: labelColor ?? Colors.grey,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                      ],
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.task_alt_outlined,
+                        size: 60,
+                        color: Colors.orangeAccent[400],
+                      ),
                     ),
-                    // subtitle/description nếu có
-                    if (task.description != null &&
-                        task.description!.trim().isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Text(
-                          task.description!,
-                          style: const TextStyle(
-                            color: Colors.black45,
-                            fontSize: 13,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'No tasks yet',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.orangeAccent[700],
                       ),
-                    // Dòng dưới: avatar nhóm người làm (ở giữa)
-                    if (memberAvatars.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 12),
-                        child: Row(children: memberAvatars),
-                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'This project has no tasks assigned.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                    ),
                   ],
                 ),
-              );
-            }),
+              )
+            else
+              ...project.tasks.map((task) {
+                DateTime? endDate;
+                try {
+                  endDate = task.endDate != null
+                      ? DateTime.parse(task.endDate!)
+                      : null;
+                } catch (_) {}
+
+                final status = task.status.trim().toLowerCase();
+                final bool showFlag = status != "completed";
+                Widget? flag;
+                String? note;
+                Color flagColor = Colors.grey;
+                Color? labelColor;
+
+                if (showFlag && endDate != null) {
+                  if (now.isAfter(endDate)) {
+                    flagColor = Colors.red;
+                    note = "Overdue";
+                    labelColor = Colors.red;
+                    flag = Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.flag_rounded,
+                        color: flagColor,
+                        size: 16,
+                      ),
+                    );
+                  } else {
+                    final remaining = endDate.difference(now);
+                    if (remaining.inDays >= 1) {
+                      note = "${remaining.inDays}d left";
+                    } else {
+                      final hoursLeft = remaining.inHours < 1
+                          ? 1
+                          : (remaining.inHours + 1);
+                      note = "${hoursLeft}h left";
+                    }
+                    flagColor = Colors.orange;
+                    labelColor = Colors.orange[700];
+                    flag = Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade50,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.access_time,
+                        color: flagColor,
+                        size: 14,
+                      ),
+                    );
+                  }
+                }
+
+                Widget? assigneeWidget;
+                if (task.assignee != null) {
+                  final assignee = task.assignee!;
+                  assigneeWidget = Row(
+                    children: [
+                      Icon(
+                        Icons.person_outline,
+                        size: 15,
+                        color: Colors.grey[600],
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: RichText(
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          text: TextSpan(
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[700],
+                            ),
+                            children: [
+                              TextSpan(
+                                text: assignee.fullName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              TextSpan(
+                                text: ' • ${assignee.email}',
+                                style: TextStyle(color: Colors.grey[500]),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                }
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.06),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap: () {
+                        // Handle task tap
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        task.title,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+
+                                      // Container(
+                                      //   padding: const EdgeInsets.symmetric(
+                                      //     horizontal: 10,
+                                      //     vertical: 4,
+                                      //   ),
+                                      //   decoration: BoxDecoration(
+                                      //     color: _getStatusColor(
+                                      //       task.status,
+                                      //     ).withOpacity(0.1),
+                                      //     borderRadius: BorderRadius.circular(
+                                      //       6,
+                                      //     ),
+                                      //   ),
+                                      //   child: Text(
+                                      //     task.status.toUpperCase(),
+                                      //     style: TextStyle(
+                                      //       fontSize: 10,
+                                      //       fontWeight: FontWeight.bold,
+                                      //       color: _getStatusColor(task.status),
+                                      //       letterSpacing: 0.5,
+                                      //     ),
+                                      //   ),
+                                      // ),
+                                    ],
+                                  ),
+                                ),
+                                if (flag != null) ...[
+                                  const SizedBox(width: 12),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      flag,
+                                      if (note != null) ...[
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          note,
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600,
+                                            color: labelColor,
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ],
+                              ],
+                            ),
+                            if (task.description != null &&
+                                task.description!.trim().isNotEmpty) ...[
+                              const SizedBox(height: 10),
+                              Text(
+                                task.description!,
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 13,
+                                  height: 1.4,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                            if (assigneeWidget != null) ...[
+                              const SizedBox(height: 12),
+                              const Divider(height: 1),
+                              const SizedBox(height: 10),
+                              assigneeWidget,
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }),
           ],
         ),
       ),
