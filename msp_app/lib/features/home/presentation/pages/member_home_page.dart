@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:msp_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:msp_app/features/home/domain/params/project_query_param.dart';
 import 'package:msp_app/features/home/presentation/widgets/home_card.dart';
 import 'package:msp_app/features/meeting/presentation/pages/meeting_list_page.dart';
@@ -52,7 +53,9 @@ class MemberHomePage extends ConsumerWidget {
         userEmail: user.email,
         userRole: user.role,
         onLogout: () async {
-          await UserPrefs.clear();
+          // Gọi logout từ AuthProvider (đã có disconnect SignalR)
+          await ref.read(authProvider.notifier).logout();
+          // Clear userProvider state
           ref.read(userProvider.notifier).state = UserInfo.empty();
           if (context.mounted) {
             Navigator.of(context).pushAndRemoveUntil(

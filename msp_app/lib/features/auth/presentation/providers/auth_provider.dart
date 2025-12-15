@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:msp_app/core/local/user_prefs.dart';
+import 'package:msp_app/core/services/signalr_service_provider.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/entities/user_token_entity.dart';
 import '../../data/repositories/auth_repository_impl.dart';
@@ -24,7 +25,9 @@ class AuthState {
 
 class AuthProvider extends StateNotifier<AuthState> {
   final LoginUseCase loginUseCase;
-  AuthProvider(this.loginUseCase) : super(const AuthState());
+  final Ref ref;
+
+  AuthProvider(this.loginUseCase, this.ref) : super(const AuthState());
 
   Future<void> login(String email, String password) async {
     state = state.copyWith(loading: true, error: null);
@@ -48,8 +51,21 @@ class AuthProvider extends StateNotifier<AuthState> {
       );
 
       state = state.copyWith(loading: false, token: token);
+      // Connect SignalR sau khi login thành công
+      _connectSignalR();
     } catch (e) {
       state = state.copyWith(loading: false, error: e.toString());
+    }
+  }
+
+  // Method connect SignalR
+  Future<void> _connectSignalR() async {
+    try {
+      final signalRService = ref.read(signalRServiceProvider);
+      await signalRService.connect();
+    } catch (e) {
+      // Log lỗi nhưng không block login
+      print('⚠️ SignalR connection failed: $e');
     }
   }
 
@@ -69,6 +85,22 @@ class AuthProvider extends StateNotifier<AuthState> {
       loading: false,
       error: null,
     );
+
+    // Reconnect SignalR khi restore session
+    _connectSignalR();
+  }
+
+  // Logout method để disconnect SignalR
+  Future<void> logout() async {
+    try {
+      final signalRService = ref.read(signalRServiceProvider);
+      await signalRService.disconnect();
+    } catch (e) {
+      print('⚠️ SignalR disconnect error: $e');
+    }
+
+    await UserPrefs.clear();
+    state = const AuthState();
   }
 }
 
@@ -77,5 +109,5 @@ final loginUseCaseProvider = Provider<LoginUseCase>((ref) {
   return LoginUseCase(AuthRepositoryImpl(AuthRemoteDatasource()));
 });
 final authProvider = StateNotifierProvider<AuthProvider, AuthState>(
-  (ref) => AuthProvider(ref.read(loginUseCaseProvider)),
+  (ref) => AuthProvider(ref.read(loginUseCaseProvider), ref),
 );
