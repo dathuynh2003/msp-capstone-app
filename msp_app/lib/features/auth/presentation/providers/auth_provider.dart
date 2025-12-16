@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:msp_app/core/local/user_prefs.dart';
+import 'package:msp_app/core/services/fcm_service_provider.dart';
 import 'package:msp_app/core/services/signalr_service_provider.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/entities/user_token_entity.dart';
@@ -51,21 +52,25 @@ class AuthProvider extends StateNotifier<AuthState> {
       );
 
       state = state.copyWith(loading: false, token: token);
-      // Connect SignalR sau khi login thành công
-      _connectSignalR();
+      // Connect SignalR + gửi FCM token
+      await _connectSignalRAndRegisterFCM();
     } catch (e) {
       state = state.copyWith(loading: false, error: e.toString());
     }
   }
 
   // Method connect SignalR
-  Future<void> _connectSignalR() async {
+  Future<void> _connectSignalRAndRegisterFCM() async {
     try {
+      // 1. Connect SignalR
       final signalRService = ref.read(signalRServiceProvider);
       await signalRService.connect();
+
+      // 2. THÊM: Gửi FCM token lên backend
+      final fcmService = ref.read(fcmServiceProvider);
+      await fcmService.sendTokenToBackend();
     } catch (e) {
-      // Log lỗi nhưng không block login
-      print('⚠️ SignalR connection failed: $e');
+      print('⚠️ SignalR/FCM setup failed: $e');
     }
   }
 
@@ -86,13 +91,17 @@ class AuthProvider extends StateNotifier<AuthState> {
       error: null,
     );
 
-    // Reconnect SignalR khi restore session
-    _connectSignalR();
+    // Reconnect SignalR + resend FCM token
+    _connectSignalRAndRegisterFCM();
   }
 
-  // Logout method để disconnect SignalR
+  // Logout method - deactivate FCM + disconnect SignalR
   Future<void> logout() async {
     try {
+      //Deactivate FCM token
+      final fcmService = ref.read(fcmServiceProvider);
+      await fcmService.deactivateToken();
+      // Disconnect SignalR
       final signalRService = ref.read(signalRServiceProvider);
       await signalRService.disconnect();
     } catch (e) {
