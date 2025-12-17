@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:msp_app/features/project/data/models/project_detail_response.dart';
 import 'package:msp_app/features/project/presentation/widgets/project_header_card.dart';
 import 'package:msp_app/features/project/presentation/widgets/task_item_card.dart';
+import 'package:msp_app/features/task/presentation/pages/task_detail_page.dart';
 
 const Color pastelPeach = Color(0xFFFFD7BA);
 const Color pastelPeachLight = Color(0xFFFFE9D9);
@@ -136,6 +137,14 @@ class _ProjectDetailContentState extends State<ProjectDetailContent>
                   itemKey: _taskKeys[taskId]!,
                   onTap: () {
                     debugPrint('👆 Tapped task: $taskId');
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => TaskDetailPage(
+                          taskId: taskId,
+                          projectId: project.projectId,
+                        ),
+                      ),
+                    );
                   },
                 );
               }),
