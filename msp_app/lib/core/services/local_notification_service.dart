@@ -1,5 +1,8 @@
+import 'dart:convert';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/foundation.dart';
+import '../navigation/notification_navigator.dart';
+import 'package:msp_app/core/services/background_service.dart';
 
 class LocalNotificationService {
   static final LocalNotificationService _instance =
@@ -14,25 +17,22 @@ class LocalNotificationService {
 
   /// Initialize local notifications
   Future<void> initialize() async {
-    if (_initialized) return;
+    if (_initialized) {
+      debugPrint('⚠️ [LocalNotification] Already initialized');
+      return;
+    }
 
     const androidSettings = AndroidInitializationSettings(
       '@mipmap/ic_launcher',
     );
-    // const iosSettings = DarwinInitializationSettings(
-    //   requestAlertPermission: true,
-    //   requestBadgePermission: true,
-    //   requestSoundPermission: true,
-    // );
 
-    const initSettings = InitializationSettings(
-      android: androidSettings,
-      // iOS: iosSettings,
-    );
+    const initSettings = InitializationSettings(android: androidSettings);
 
     await _notifications.initialize(
       initSettings,
       onDidReceiveNotificationResponse: _onNotificationTapped,
+      onDidReceiveBackgroundNotificationResponse:
+          _onNotificationTapped, // ✅ CRITICAL
     );
 
     // Request permission (Android 13+)
@@ -50,17 +50,9 @@ class LocalNotificationService {
         >();
 
     if (androidPlugin != null) {
-      await androidPlugin.requestNotificationsPermission();
+      final granted = await androidPlugin.requestNotificationsPermission();
+      debugPrint('🔔 [LocalNotification] Permission granted: $granted');
     }
-
-    // final iosPlugin = _notifications
-    //     .resolvePlatformSpecificImplementation<
-    //       IOSFlutterLocalNotificationsPlugin
-    //     >();
-
-    // if (iosPlugin != null) {
-    //   await iosPlugin.requestPermissions(alert: true, badge: true, sound: true);
-    // }
   }
 
   /// Show notification
@@ -78,6 +70,8 @@ class LocalNotificationService {
       priority: Priority.high,
       showWhen: true,
       icon: '@mipmap/ic_launcher',
+      playSound: true,
+      enableVibration: true,
     );
 
     const iosDetails = DarwinNotificationDetails(
@@ -93,34 +87,102 @@ class LocalNotificationService {
 
     await _notifications.show(id, title, body, details, payload: payload);
     debugPrint('📬 [LocalNotification] Showed: $title');
+    if (payload != null) {
+      debugPrint('📦 [LocalNotification] Payload: $payload');
+    }
   }
 
-  /// Handle notification tap
-  void _onNotificationTapped(NotificationResponse response) {
-    debugPrint('🔔 [LocalNotification] Tapped: ${response.payload}');
+  /// Handle notification tap (FOREGROUND & BACKGROUND)
+  @pragma('vm:entry-point')
+  static void _onNotificationTapped(NotificationResponse response) async {
+    final payload = response.payload;
 
-    // TODO: Navigate to notification detail page
-    // Parse payload và navigate đến màn hình tương ứng
-    if (response.payload != null) {
-      // Example: payload = "task:abc123" hoặc "meeting:xyz789"
-      final parts = response.payload!.split(':');
-      if (parts.length == 2) {
-        final type = parts[0];
-        final entityId = parts[1];
+    debugPrint('');
+    debugPrint('========================================');
+    debugPrint('🔔 [LocalNotification] TAPPED');
+    debugPrint('🔔 [LocalNotification] Action: ${response.actionId}');
+    debugPrint('🔔 [LocalNotification] Payload: $payload');
+    debugPrint('========================================');
 
-        // Navigate based on type
-        // navigatorKey.currentState?.pushNamed('/detail', arguments: entityId);
+    if (payload == null || payload.isEmpty) {
+      debugPrint('⚠️ [LocalNotification] Empty payload - ignoring');
+      debugPrint('========================================');
+      debugPrint('');
+      return;
+    }
+
+    try {
+      // Parse JSON payload
+      final data = jsonDecode(payload) as Map<String, dynamic>;
+
+      final entityType = data['entityType'] as String?;
+      final entityId = data['entityId'] as String?;
+      final notificationType = data['notificationType'] as String?;
+      final extraData = data['data'] as Map<String, dynamic>?;
+
+      debugPrint('📦 [LocalNotification] Parsed:');
+      debugPrint('   - entityType: $entityType');
+      debugPrint('   - entityId: $entityId');
+      debugPrint('   - notificationType: $notificationType');
+      debugPrint('   - extraData: $extraData');
+
+      if (entityType == null || entityId == null) {
+        debugPrint('❌ [LocalNotification] Missing entityType or entityId');
+        debugPrint('========================================');
+        debugPrint('');
+        return;
       }
+
+      // Wait for app to be ready
+      debugPrint('⏳ [LocalNotification] Waiting 500ms for app...');
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // Check if context is available
+      var context = BackgroundServiceHelper.navigatorKey.currentContext;
+
+      if (context == null) {
+        debugPrint('⚠️ [LocalNotification] Context null - retrying in 1s...');
+        await Future.delayed(const Duration(seconds: 1));
+        context = BackgroundServiceHelper.navigatorKey.currentContext;
+
+        if (context == null) {
+          debugPrint('❌ [LocalNotification] Context still null - giving up');
+          debugPrint('========================================');
+          debugPrint('');
+          return;
+        }
+      }
+
+      debugPrint('✅ [LocalNotification] Context ready - navigating...');
+
+      // Navigate using NotificationNavigator
+      NotificationNavigator.handleNotificationTap(
+        entityType: entityType,
+        entityId: entityId,
+        notificationType: notificationType ?? 'unknown',
+        data: extraData,
+      );
+
+      debugPrint('✅ [LocalNotification] Navigation triggered');
+      debugPrint('========================================');
+      debugPrint('');
+    } catch (e, stack) {
+      debugPrint('❌ [LocalNotification] Error: $e');
+      debugPrint('Stack: $stack');
+      debugPrint('========================================');
+      debugPrint('');
     }
   }
 
   /// Cancel notification
   Future<void> cancel(int id) async {
     await _notifications.cancel(id);
+    debugPrint('🗑️ [LocalNotification] Cancelled: $id');
   }
 
   /// Cancel all notifications
   Future<void> cancelAll() async {
     await _notifications.cancelAll();
+    debugPrint('🗑️ [LocalNotification] Cancelled all');
   }
 }

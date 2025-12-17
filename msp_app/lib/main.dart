@@ -10,19 +10,37 @@ import '/app.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 1. Initialize Firebase TRƯỚC TIÊN
+  debugPrint('');
+  debugPrint('========================================');
+  debugPrint('🚀 [Main] App Initializing...');
+  debugPrint('========================================');
+
+  // 1. Initialize Firebase FIRST
+  debugPrint('🔥 [Main] Initializing Firebase...');
   await Firebase.initializeApp();
+  debugPrint('✅ [Main] Firebase initialized');
 
-  // 2. Initialize Background Service
-  await BackgroundServiceHelper.initialize();
-
-  // 3. Initialize FCM Service
-  final fcmService = FCMService();
-  await fcmService.initialize();
-
-  // 4. Initialize Local Notifications
+  // 2. Initialize Local Notifications SECOND (must be before FCM)
+  debugPrint('🔔 [Main] Initializing Local Notifications...');
   final localNotificationService = LocalNotificationService();
   await localNotificationService.initialize();
+  debugPrint('✅ [Main] Local Notifications initialized');
+
+  // 3. Initialize Background Service (Stream Video)
+  debugPrint('📹 [Main] Initializing Background Service...');
+  await BackgroundServiceHelper.initialize();
+  debugPrint('✅ [Main] Background Service initialized');
+
+  // 4. Initialize FCM Service LAST
+  debugPrint('📨 [Main] Initializing FCM...');
+  final fcmService = FCMService();
+  await fcmService.initialize();
+  debugPrint('✅ [Main] FCM initialized');
+
+  debugPrint('========================================');
+  debugPrint('✅ [Main] All services initialized');
+  debugPrint('========================================');
+  debugPrint('');
 
   runApp(
     ProviderScope(

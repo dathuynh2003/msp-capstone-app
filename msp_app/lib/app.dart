@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:msp_app/core/services/background_service.dart';
-import 'core/services/local_notification_service.dart';
+import 'core/routes/route_generator.dart';
 import 'features/auth/presentation/widgets/auth_wrapper.dart';
-import 'features/auth/presentation/pages/login_page.dart';
-import 'features/home/presentation/pages/member_home_page.dart';
-import 'features/meeting/presentation/pages/join_meeting_page.dart';
 
 class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
@@ -16,8 +12,6 @@ class MyApp extends ConsumerStatefulWidget {
 }
 
 class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
-  final _localNotificationService = LocalNotificationService();
-
   @override
   void initState() {
     super.initState();
@@ -30,7 +24,6 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  /// Detect app lifecycle changes
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
@@ -38,22 +31,16 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
     switch (state) {
       case AppLifecycleState.paused:
         debugPrint('📴 [App Lifecycle] App paused (background)');
-        // App đi vào background - SignalR có thể disconnect
         break;
-
       case AppLifecycleState.resumed:
         debugPrint('📱 [App Lifecycle] App resumed (foreground)');
-        // App quay lại foreground - SignalR nên reconnect
         break;
-
       case AppLifecycleState.inactive:
         debugPrint('⏸️ [App Lifecycle] App inactive');
         break;
-
       case AppLifecycleState.detached:
         debugPrint('🔌 [App Lifecycle] App detached');
         break;
-
       case AppLifecycleState.hidden:
         debugPrint('👻 [App Lifecycle] App hidden');
         break;
@@ -67,22 +54,34 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.blue),
       navigatorKey: BackgroundServiceHelper.navigatorKey,
       home: const AuthWrapper(),
-      routes: {
-        '/login': (context) => const LoginPage(),
-        '/home': (context) => const MemberHomePage(),
-        '/meeting': (context) {
-          final args =
-              ModalRoute.of(context)!.settings.arguments
-                  as Map<String, dynamic>;
-          return JoinMeetingPage(
-            meetingId: args['meetingId'],
-            userId: args['userId'],
-            cameraOn: args['cameraOn'],
-            micOn: args['micOn'],
-          );
-        },
-        // TODO: Thêm routes cho project/task detail
-      },
+      onGenerateRoute: RouteGenerator.generateRoute, // Dùng RouteGenerator
+      debugShowCheckedModeBanner: false,
+      navigatorObservers: [_AppNavigatorObserver()],
+    );
+  }
+}
+
+class _AppNavigatorObserver extends NavigatorObserver {
+  @override
+  void didPush(Route route, Route? previousRoute) {
+    super.didPush(route, previousRoute);
+    debugPrint('🧭 [Navigation] PUSH: ${route.settings.name ?? 'Unknown'}');
+    if (route.settings.arguments != null) {
+      debugPrint('📦 [Navigation] Arguments: ${route.settings.arguments}');
+    }
+  }
+
+  @override
+  void didPop(Route route, Route? previousRoute) {
+    super.didPop(route, previousRoute);
+    debugPrint('🧭 [Navigation] POP: ${route.settings.name ?? 'Unknown'}');
+  }
+
+  @override
+  void didReplace({Route? newRoute, Route? oldRoute}) {
+    super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+    debugPrint(
+      '🧭 [Navigation] REPLACE: ${oldRoute?.settings.name} → ${newRoute?.settings.name}',
     );
   }
 }

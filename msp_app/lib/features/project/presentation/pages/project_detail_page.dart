@@ -10,10 +10,23 @@ const Color orangeGold = Color(0xFFFDF0D2);
 
 class ProjectDetailPage extends ConsumerWidget {
   final String projectId;
-  const ProjectDetailPage({super.key, required this.projectId});
+  final String? highlightTaskId;
+
+  const ProjectDetailPage({
+    super.key,
+    required this.projectId,
+    this.highlightTaskId,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    debugPrint('');
+    debugPrint('========================================');
+    debugPrint('🏗️ [ProjectDetailPage] Building...');
+    debugPrint('🏗️ [ProjectDetailPage] projectId: $projectId');
+    debugPrint('🏗️ [ProjectDetailPage] highlightTaskId: $highlightTaskId');
+    debugPrint('========================================');
+
     final user = ref.watch(userProvider);
     final userId = user.userId;
     final params = ProjectDetailParams(projectId, userId);
@@ -22,7 +35,6 @@ class ProjectDetailPage extends ConsumerWidget {
 
     Future<void> refresh() async {
       ref.invalidate(projectDetailProvider(params));
-      // Chờ nhẹ để UX smooth (không cần nếu muốn refresh tức thì)
       await Future.delayed(const Duration(milliseconds: 350));
     }
 
@@ -61,15 +73,39 @@ class ProjectDetailPage extends ConsumerWidget {
         ),
       ),
       body: asyncDetail.when(
-        data: (detail) =>
-            ProjectDetailContent(project: detail, onRefresh: refresh),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(
-          child: Text(
-            'Lỗi tải dự án: $err',
-            style: const TextStyle(color: Colors.red),
-          ),
-        ),
+        data: (detail) {
+          debugPrint('✅ [ProjectDetailPage] Data loaded successfully');
+          debugPrint('✅ [ProjectDetailPage] Project name: ${detail.name}');
+          debugPrint(
+            '✅ [ProjectDetailPage] Tasks count: ${detail.tasks.length}',
+          );
+          if (detail.tasks.isNotEmpty) {
+            debugPrint(
+              '✅ [ProjectDetailPage] First task: ${detail.tasks.first.taskId}',
+            );
+          }
+          return ProjectDetailContent(
+            project: detail,
+            onRefresh: refresh,
+            highlightTaskId: highlightTaskId,
+          );
+        },
+        loading: () {
+          debugPrint('⏳ [ProjectDetailPage] Loading data...');
+          return const Center(
+            child: CircularProgressIndicator(color: orangeDeep),
+          );
+        },
+        error: (err, stack) {
+          debugPrint('❌ [ProjectDetailPage] Error: $err');
+          debugPrint('❌ [ProjectDetailPage] Stack: $stack');
+          return Center(
+            child: Text(
+              'Lỗi tải dự án: $err',
+              style: const TextStyle(color: Colors.red),
+            ),
+          );
+        },
       ),
     );
   }

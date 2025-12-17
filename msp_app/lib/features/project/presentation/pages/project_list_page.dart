@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:msp_app/core/routes/app_routes.dart'; // THÊM
 import 'package:msp_app/features/home/presentation/providers/user_provider.dart';
 import 'package:msp_app/features/home/presentation/widgets/folder_project_card.dart';
-import 'package:msp_app/features/project/presentation/pages/project_detail_page.dart';
+import 'package:msp_app/features/home/presentation/widgets/modern_project_card.dart';
 import 'package:msp_app/features/project/presentation/providers/project_providers.dart';
 
 const Color orangeDeep = Color(0xFFFFA463);
+const Color pastelPeach = Color(0xFFFFD7BA); // Cam đào pastel
 
 class ProjectListPage extends ConsumerWidget {
-  const ProjectListPage({super.key});
+  // XÓA: highlightProjectId (không cần nữa)
+  const ProjectListPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -108,21 +111,23 @@ class ProjectListPage extends ConsumerWidget {
               itemCount: projects.length,
               itemBuilder: (context, index) {
                 final project = projects[index];
-                return FolderProjectCard(
-                  title: project.name,
-                  description: project.description,
-                  owner: project.owner.fullName,
-                  startDate: project.startDate ?? '',
-                  endDate: project.endDate,
-                  color: orangeDeep,
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            ProjectDetailPage(projectId: project.id),
-                      ),
-                    );
-                  },
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: ModernProjectCard(
+                    title: project.name,
+                    description: project.description,
+                    owner: project.owner.fullName,
+                    startDate: project.startDate ?? '',
+                    endDate: project.endDate,
+                    color: pastelPeach,
+                    onTap: () {
+                      Navigator.of(context).pushNamed(
+                        AppRoutes.projectDetail,
+                        arguments: {'projectId': project.id},
+                      );
+                    },
+                  ),
                 );
               },
             ),

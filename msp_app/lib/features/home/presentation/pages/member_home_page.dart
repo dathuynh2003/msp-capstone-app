@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:msp_app/core/routes/app_routes.dart';
 import 'package:msp_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:msp_app/features/home/domain/params/project_query_param.dart';
 import 'package:msp_app/features/home/presentation/widgets/home_card.dart';
+import 'package:msp_app/features/home/presentation/widgets/modern_project_card.dart';
 import 'package:msp_app/features/meeting/presentation/pages/meeting_list_page.dart';
-import 'package:msp_app/features/project/presentation/pages/project_list_page.dart';
 import 'package:msp_app/shared/widgets/member_drawer.dart';
 import 'package:msp_app/features/home/presentation/providers/user_provider.dart';
-import 'package:msp_app/core/local/user_prefs.dart';
 import '../../../auth/presentation/pages/login_page.dart';
 import '../../presentation/providers/project_provider.dart';
-import '../../presentation/widgets/folder_project_card.dart';
-import 'package:msp_app/features/project/presentation/pages/project_detail_page.dart';
 
 // Palette demo
 const Color orangeDeep = Color(0xFFFFA463);
-const Color orangeLight = Color(0xFFFFDBBD);
+const Color orangePrimary = Color(0xFFFF9966); // Cam chính - sáng hơn
+const Color orangeAccent = Color(0xFFFFB347); // Cam nhạt
+const Color orangeLight = Color(0xFFFFF4E6); // Cam rất nhạt (background)
+const Color orangeGlow = Color.fromARGB(255, 250, 187, 115); // Cam phát sáng
+const Color pastelPeach = Color(0xFFFFD7BA); // Cam đào pastel
 
 class MemberHomePage extends ConsumerWidget {
   const MemberHomePage({super.key});
@@ -111,11 +113,7 @@ class MemberHomePage extends ConsumerWidget {
                     icon: Icons.folder_special_rounded,
                     label: 'Projects',
                     onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const ProjectListPage(),
-                        ),
-                      );
+                      Navigator.of(context).pushNamed(AppRoutes.projectList);
                     },
                   ),
                   // Nếu muốn thêm action, thêm tại đây
@@ -174,20 +172,17 @@ class MemberHomePage extends ConsumerWidget {
                   itemCount: projects.length,
                   itemBuilder: (_, idx) {
                     final project = projects[idx];
-                    return FolderProjectCard(
+                    return ModernProjectCard(
                       title: project.name,
                       description: project.description,
                       owner: project.owner.fullName,
                       startDate: project.startDate ?? '',
                       endDate: project.endDate,
-                      color: orangeDeep,
+                      color: pastelPeach,
                       onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => ProjectDetailPage(
-                              projectId: project.id,
-                            ), // project.id hoặc project.projectId
-                          ),
+                        Navigator.of(context).pushNamed(
+                          AppRoutes.projectDetail,
+                          arguments: {'projectId': project.id},
                         );
                       },
                     );

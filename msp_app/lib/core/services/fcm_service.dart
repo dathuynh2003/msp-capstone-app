@@ -10,9 +10,15 @@ import 'package:msp_app/core/services/local_notification_service.dart';
 // Top-level function cho background handler
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  debugPrint('Background message: ${message.messageId}');
-  debugPrint('📦 Data: ${message.data}');
-  // Xử lý notification ở background
+  debugPrint('');
+  debugPrint('========================================');
+  debugPrint('📨 [FCM Background] Received');
+  debugPrint('📨 [FCM Background] Title: ${message.notification?.title}');
+  debugPrint('📦 [FCM Background] Data: ${message.data}');
+  debugPrint('========================================');
+  debugPrint('');
+  // Background message sẽ tự show notification qua system tray
+  // Khi user tap sẽ trigger onMessageOpenedApp
 }
 
 class FCMService {
@@ -36,16 +42,16 @@ class FCMService {
           );
 
       if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-        debugPrint('User granted permission');
+        debugPrint('✅ [FCM] User granted permission');
 
         // Get FCM token
         _fcmToken = await _firebaseMessaging.getToken();
-        debugPrint('FCM Token: $_fcmToken');
+        debugPrint('🔑 [FCM] Token: $_fcmToken');
 
         // Listen to token refresh
         _firebaseMessaging.onTokenRefresh.listen((newToken) {
           _fcmToken = newToken;
-          debugPrint('FCM Token refreshed: $newToken');
+          debugPrint('🔄 [FCM] Token refreshed: $newToken');
           sendTokenToBackend();
         });
 
@@ -57,10 +63,10 @@ class FCMService {
           firebaseMessagingBackgroundHandler,
         );
       } else {
-        debugPrint('User declined or has not accepted permission');
+        debugPrint('⚠️ [FCM] User declined or has not accepted permission');
       }
     } catch (e) {
-      debugPrint('FCM initialization error: $e');
+      debugPrint('❌ [FCM] Initialization error: $e');
     }
   }
 
@@ -69,9 +75,12 @@ class FCMService {
     // 1. Handle notification tap khi app đã tắt (terminated)
     FirebaseMessaging.instance.getInitialMessage().then((message) {
       if (message != null) {
-        debugPrint('🚀 App opened from terminated state');
+        debugPrint('');
+        debugPrint('========================================');
+        debugPrint('🚀 [FCM] App opened from TERMINATED state');
+        debugPrint('========================================');
         // Delay để đợi app init xong
-        Future.delayed(const Duration(milliseconds: 500), () {
+        Future.delayed(const Duration(milliseconds: 800), () {
           _handleNotificationTap(message);
         });
       }
@@ -79,39 +88,77 @@ class FCMService {
 
     // 2. Handle notification tap khi app đang background
     FirebaseMessaging.onMessageOpenedApp.listen((message) {
-      debugPrint('🚀 App opened from background');
+      debugPrint('');
+      debugPrint('========================================');
+      debugPrint('🚀 [FCM] App opened from BACKGROUND');
+      debugPrint('========================================');
       _handleNotificationTap(message);
     });
 
     // 3. Handle message khi app đang foreground
     FirebaseMessaging.onMessage.listen((message) {
-      debugPrint(
-        '📨 [FCM Foreground] Received: ${message.notification?.title}',
-      );
+      debugPrint('');
+      debugPrint('========================================');
+      debugPrint('📨 [FCM Foreground] Received');
+      debugPrint('📨 Title: ${message.notification?.title}');
+      debugPrint('📨 Body: ${message.notification?.body}');
+      debugPrint('📦 Data: ${message.data}');
+      debugPrint('========================================');
+
       if (message.notification != null) {
-        // Show local notification
+        // Extract data
+        final data = message.data;
+        final entityType = data['entityType'] as String?;
+        final entityId = data['entityId'] as String?;
+        final notificationType = data['notificationType'] as String?;
+
+        // Build JSON payload
+        final payload = jsonEncode({
+          'entityType': entityType,
+          'entityId': entityId,
+          'notificationType': notificationType,
+          'data': {
+            'projectId': data['projectId'],
+            'projectName': data['projectName'],
+            'taskId': data['taskId'],
+            'taskName': data['taskName'],
+            'meetingId': data['meetingId'],
+            'meetingTitle': data['meetingTitle'],
+          },
+        });
+
+        debugPrint('📦 [FCM] Built payload: $payload');
+
+        // Show local notification with payload
         _localNotificationService.showNotification(
           id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
           title: message.notification!.title ?? 'Thông báo mới',
           body: message.notification!.body ?? '',
-          payload: message.data['entityId'],
+          payload: payload, // ✅ JSON payload
         );
       }
+      debugPrint('');
     });
   }
 
   // Handle notification tap
   void _handleNotificationTap(RemoteMessage message) {
-    debugPrint('👆 Notification tapped');
-    debugPrint('Data: ${message.data}');
+    debugPrint('👆 [FCM] Notification tapped');
+    debugPrint('📦 [FCM] Data: ${message.data}');
 
     try {
       final data = message.data;
-      final entityType = data['entityType'] ?? '';
-      final entityId = data['entityId'] ?? '';
-      final notificationType = data['type'] ?? '';
+      final entityType = data['entityType'] as String? ?? '';
+      final entityId = data['entityId'] as String? ?? '';
+      final notificationType =
+          data['notificationType'] as String? ?? data['type'] as String? ?? '';
 
-      debugPrint('🎯 Navigate to: $entityType with ID: $entityId');
+      debugPrint('🎯 [FCM] Navigate to: $entityType with ID: $entityId');
+
+      if (entityType.isEmpty || entityId.isEmpty) {
+        debugPrint('⚠️ [FCM] Missing entityType or entityId');
+        return;
+      }
 
       // Delegate navigation
       NotificationNavigator.handleNotificationTap(
@@ -121,7 +168,7 @@ class FCMService {
         data: data,
       );
     } catch (e) {
-      debugPrint('❌ Error handling notification tap: $e');
+      debugPrint('❌ [FCM] Error handling notification tap: $e');
     }
   }
 
@@ -145,7 +192,7 @@ class FCMService {
         '${ApiConfig.apiBaseUrl}/notification/register-fcm-token',
       );
 
-      debugPrint('📤 [FCM] Sending token to: $url');
+      debugPrint('📤 [FCM] Sending token to backend...');
 
       final response = await HttpClient.post(
         url,
@@ -174,7 +221,7 @@ class FCMService {
     }
   }
 
-  // Deactivate FCM token Khi logout
+  // Deactivate FCM token khi logout
   Future<bool> deactivateToken() async {
     if (_fcmToken == null || _fcmToken!.isEmpty) {
       debugPrint('⚠️ [FCM] No token to deactivate');
@@ -194,7 +241,7 @@ class FCMService {
         '${ApiConfig.apiBaseUrl}/notification/deactivate-fcm-token',
       );
 
-      debugPrint('📤 [FCM] Deactivating token');
+      debugPrint('📤 [FCM] Deactivating token...');
 
       final response = await HttpClient.post(
         url,
@@ -221,12 +268,12 @@ class FCMService {
   // Subscribe to topic (optional)
   Future<void> subscribeToTopic(String topic) async {
     await _firebaseMessaging.subscribeToTopic(topic);
-    debugPrint('Subscribed to topic: $topic');
+    debugPrint('✅ [FCM] Subscribed to topic: $topic');
   }
 
   // Unsubscribe from topic
   Future<void> unsubscribeFromTopic(String topic) async {
     await _firebaseMessaging.unsubscribeFromTopic(topic);
-    debugPrint('Unsubscribed from topic: $topic');
+    debugPrint('✅ [FCM] Unsubscribed from topic: $topic');
   }
 }
