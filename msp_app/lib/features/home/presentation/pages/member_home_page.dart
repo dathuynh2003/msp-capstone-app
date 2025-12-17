@@ -1,23 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:msp_app/core/routes/app_routes.dart';
+import 'package:msp_app/core/services/signalr_service_provider.dart';
 import 'package:msp_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:msp_app/features/home/domain/params/project_query_param.dart';
 import 'package:msp_app/features/home/presentation/widgets/home_card.dart';
 import 'package:msp_app/features/home/presentation/widgets/modern_project_card.dart';
 import 'package:msp_app/features/meeting/presentation/pages/meeting_list_page.dart';
+import 'package:msp_app/features/notification/presentation/pages/notification_list_page.dart';
+import 'package:msp_app/features/notification/presentation/providers/notification_provider.dart';
 import 'package:msp_app/shared/widgets/member_drawer.dart';
 import 'package:msp_app/features/home/presentation/providers/user_provider.dart';
 import '../../../auth/presentation/pages/login_page.dart';
 import '../../presentation/providers/project_provider.dart';
 
-// Palette demo
 const Color orangeDeep = Color(0xFFFFA463);
-const Color orangePrimary = Color(0xFFFF9966); // Cam chính - sáng hơn
-const Color orangeAccent = Color(0xFFFFB347); // Cam nhạt
-const Color orangeLight = Color(0xFFFFF4E6); // Cam rất nhạt (background)
-const Color orangeGlow = Color.fromARGB(255, 250, 187, 115); // Cam phát sáng
-const Color pastelPeach = Color(0xFFFFD7BA); // Cam đào pastel
+const Color orangePrimary = Color(0xFFFF9966);
+const Color orangeAccent = Color(0xFFFFB347);
+const Color orangeLight = Color(0xFFFFF4E6);
+const Color orangeGlow = Color.fromARGB(255, 250, 187, 115);
+const Color pastelPeach = Color(0xFFFFD7BA);
 
 class MemberHomePage extends ConsumerWidget {
   const MemberHomePage({super.key});
@@ -25,6 +27,33 @@ class MemberHomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(userProvider);
+
+    // ✅ SETUP SignalR listeners INSIDE build method
+    // Listen to notification stream
+    ref.listen(notificationStreamProvider, (previous, next) {
+      next.whenData((notification) {
+        debugPrint('🔔 [HomePage] New notification: ${notification.title}');
+
+        // Refresh notification list to update badge
+        ref.invalidate(notificationListProvider(user.userId));
+      });
+    });
+
+    // Listen to unread count stream
+    ref.listen(unreadCountStreamProvider, (previous, next) {
+      next.whenData((count) {
+        debugPrint('📊 [HomePage] Unread count updated: $count');
+
+        // Refresh notification list to update badge
+        ref.invalidate(notificationListProvider(user.userId));
+      });
+    });
+
+    // Fetch notifications
+    final notificationsAsync = ref.watch(notificationListProvider(user.userId));
+
+    // Get unread count
+    final unreadCount = ref.watch(unreadCountProvider(user.userId));
 
     final listAsync = ref.watch(
       projectListProvider(
@@ -55,9 +84,7 @@ class MemberHomePage extends ConsumerWidget {
         userEmail: user.email,
         userRole: user.role,
         onLogout: () async {
-          // Gọi logout từ AuthProvider (đã có disconnect SignalR)
           await ref.read(authProvider.notifier).logout();
-          // Clear userProvider state
           ref.read(userProvider.notifier).state = UserInfo.empty();
           if (context.mounted) {
             Navigator.of(context).pushAndRemoveUntil(
@@ -94,9 +121,21 @@ class MemberHomePage extends ConsumerWidget {
                   HomeCard(
                     icon: Icons.notifications,
                     label: 'Notifications',
-                    onTap: () {},
+                    badgeCount: unreadCount,
+                    onTap: () async {
+                      await Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              NotificationListPage(userId: user.userId),
+                        ),
+                      );
+
+                      if (context.mounted) {
+                        ref.invalidate(notificationListProvider(user.userId));
+                      }
+                    },
                   ),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   HomeCard(
                     icon: Icons.calendar_month,
                     label: 'Meetings',
@@ -108,7 +147,7 @@ class MemberHomePage extends ConsumerWidget {
                       );
                     },
                   ),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   HomeCard(
                     icon: Icons.folder_special_rounded,
                     label: 'Projects',
@@ -116,7 +155,6 @@ class MemberHomePage extends ConsumerWidget {
                       Navigator.of(context).pushNamed(AppRoutes.projectList);
                     },
                   ),
-                  // Nếu muốn thêm action, thêm tại đây
                 ],
               ),
             ),
@@ -124,8 +162,7 @@ class MemberHomePage extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 18),
               child: Row(
-                mainAxisAlignment:
-                    MainAxisAlignment.spaceBetween, // label left, icon right!
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const Text(
@@ -160,7 +197,6 @@ class MemberHomePage extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Divider(height: 1, thickness: 1, color: Colors.grey[500]),
             ),
-
             const SizedBox(height: 8),
             Expanded(
               child: listAsync.when(
@@ -188,12 +224,13 @@ class MemberHomePage extends ConsumerWidget {
                     );
                   },
                 ),
-                loading: () =>
-                    Center(child: CircularProgressIndicator(color: orangeDeep)),
+                loading: () => const Center(
+                  child: CircularProgressIndicator(color: orangeDeep),
+                ),
                 error: (err, _) => Center(
                   child: Text(
                     'Error: $err',
-                    style: TextStyle(color: Colors.red),
+                    style: const TextStyle(color: Colors.red),
                   ),
                 ),
               ),
