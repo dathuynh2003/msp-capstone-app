@@ -1,3 +1,5 @@
+import 'package:msp_app/features/task/data/models/task_comment_dto.dart';
+
 class TaskDetailResponse {
   final String id;
   final String projectId;
@@ -15,6 +17,8 @@ class TaskDetailResponse {
   final TaskUserDto? reviewer;
   final List<TaskMilestoneDto> milestones;
   final List<TaskHistoryDto> taskHistories;
+  final List<TaskCommentDto> comments;
+  final int totalComments;
 
   TaskDetailResponse({
     required this.id,
@@ -33,6 +37,8 @@ class TaskDetailResponse {
     this.reviewer,
     this.milestones = const [],
     this.taskHistories = const [],
+    this.comments = const [],
+    this.totalComments = 0,
   });
 
   factory TaskDetailResponse.fromJson(Map<String, dynamic> json) {
@@ -71,6 +77,55 @@ class TaskDetailResponse {
                 .map((e) => TaskHistoryDto.fromJson(e as Map<String, dynamic>))
                 .toList()
           : [],
+      comments: json['comments'] != null
+          ? (json['comments'] as List)
+                .map((e) => TaskCommentDto.fromJson(e as Map<String, dynamic>))
+                .toList()
+          : [],
+      totalComments: json['totalComments'] as int? ?? 0,
+    );
+  }
+
+  // CopyWith method
+  TaskDetailResponse copyWith({
+    String? id,
+    String? projectId,
+    String? userId,
+    String? reviewerId,
+    String? title,
+    String? description,
+    String? status,
+    DateTime? startDate,
+    DateTime? endDate,
+    bool? isOverdue,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    TaskUserDto? user,
+    TaskUserDto? reviewer,
+    List<TaskMilestoneDto>? milestones,
+    List<TaskHistoryDto>? taskHistories,
+    List<TaskCommentDto>? comments,
+    int? totalComments,
+  }) {
+    return TaskDetailResponse(
+      id: id ?? this.id,
+      projectId: projectId ?? this.projectId,
+      userId: userId ?? this.userId,
+      reviewerId: reviewerId ?? this.reviewerId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      status: status ?? this.status,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      isOverdue: isOverdue ?? this.isOverdue,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      user: user ?? this.user,
+      reviewer: reviewer ?? this.reviewer,
+      milestones: milestones ?? this.milestones,
+      taskHistories: taskHistories ?? this.taskHistories,
+      comments: comments ?? this.comments,
+      totalComments: totalComments ?? this.totalComments,
     );
   }
 }
@@ -202,16 +257,22 @@ class TaskHistoryDto {
   String get changeDescription {
     switch (action) {
       case 'Created':
-        return 'Created task';
+        return 'Task Created';
       case 'Assigned':
-        return 'Assigned to ${toUser?.fullName ?? "N/A"}';
+        if (fromUser == null) {
+          return 'Assigned task to ${toUser?.fullName}';
+        } else if (toUser == null) {
+          return 'Unassigned task from ${fromUser?.fullName}';
+        } else {
+          return 'Reassigned task from ${fromUser?.fullName} to ${toUser?.fullName}';
+        }
       case 'Reassigned':
         return 'Reassigned from ${fromUser?.fullName ?? "N/A"} to ${toUser?.fullName ?? "N/A"}';
       case 'StatusChanged':
         return 'Changed status from "$oldValue" to "$newValue"';
       case 'Updated':
         if (fieldName == 'Title') {
-          return 'Changed title from "$oldValue" to "$newValue"';
+          return 'Changed task title from "$oldValue" to "$newValue"';
         } else if (fieldName == 'Description') {
           return 'Updated description';
         } else if (fieldName == 'StartDate') {

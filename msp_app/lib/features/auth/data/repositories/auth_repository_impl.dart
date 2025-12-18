@@ -21,6 +21,13 @@ class AuthRepositoryImpl implements AuthRepository {
     final roles = (decoded['role'] as String).split(',');
     final mainRole = roles.isNotEmpty ? roles.first : '';
 
+    if (roles.isEmpty) {
+      throw Exception("No role assigned to the user!");
+    }
+    if (roles[0] != 'Member') {
+      throw Exception("Only 'Member' role is allowed to login!");
+    }
+
     return UserTokenEntity(
       accessToken: res.accessToken,
       refreshToken: res.refreshToken,

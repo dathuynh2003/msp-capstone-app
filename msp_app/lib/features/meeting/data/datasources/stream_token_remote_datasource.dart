@@ -12,7 +12,6 @@ class StreamTokenRemoteDatasource {
     final uri = Uri.parse('${ApiConfig.apiBaseUrl}/stream/register');
     final response = await HttpClient.post(
       uri,
-      headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         'id': userId,
         'name': userName,

@@ -1,9 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:msp_app/core/services/background_service.dart';
 import 'package:msp_app/features/project/presentation/providers/project_detail_provider.dart';
 import 'package:msp_app/features/project/domain/params/project_detail_params.dart';
 import 'package:msp_app/features/home/presentation/providers/user_provider.dart';
+import 'package:msp_app/features/task/data/datasources/task_remote_datasource.dart';
 import '../routes/app_routes.dart';
 
 class NotificationNavigator {
@@ -33,6 +35,14 @@ class NotificationNavigator {
 
     debugPrint('✅ [NotificationNavigator] Context available');
 
+    // ✅ PRIORITY 1: Handle TaskUpdate type (comment notifications)
+    if (notificationType.toLowerCase() == 'taskupdate') {
+      debugPrint('🎯 [NotificationNavigator] Detected TaskUpdate type');
+      _navigateToTaskFromComment(context, data);
+      return;
+    }
+
+    // ✅ PRIORITY 2: Handle other entity types
     switch (entityType.toLowerCase()) {
       case 'task':
         _navigateToTask(context, entityId, data);
@@ -59,6 +69,83 @@ class NotificationNavigator {
     debugPrint('');
   }
 
+  /// ✅ Navigate to Task Detail from Comment notification
+  static void _navigateToTaskFromComment(
+    BuildContext context,
+    Map<String, dynamic>? data,
+  ) async {
+    debugPrint('💬 [NotificationNavigator] _navigateToTaskFromComment called');
+    debugPrint('   - data: $data');
+
+    // Extract IDs from data
+    String? taskId = data?['TaskId'] as String?;
+    String? projectId = data?['ProjectId'] as String?;
+    String? commentId = data?['CommentId'] as String?;
+
+    debugPrint('💬 [NotificationNavigator] Extracted from data:');
+    debugPrint('   - taskId: $taskId');
+    debugPrint('   - projectId: $projectId');
+    debugPrint('   - commentId: $commentId');
+
+    if (taskId == null || taskId.isEmpty) {
+      debugPrint('❌ [NotificationNavigator] Missing TaskId in data');
+      _navigateToNotificationList(context);
+      return;
+    }
+
+    // ✅ If projectId not in data, fetch from API
+    if (projectId == null || projectId.isEmpty) {
+      debugPrint(
+        '⚠️ [NotificationNavigator] ProjectId not in data, fetching...',
+      );
+
+      try {
+        final datasource = TaskRemoteDatasource();
+        final taskDetail = await datasource.getTaskDetail(taskId);
+        projectId = taskDetail.projectId;
+
+        debugPrint('✅ [NotificationNavigator] Fetched projectId: $projectId');
+      } catch (e, stack) {
+        debugPrint('❌ [NotificationNavigator] Error fetching task: $e');
+        debugPrint('Stack: $stack');
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to open task: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+
+        _navigateToNotificationList(context);
+        return;
+      }
+    }
+
+    // ✅ Navigate to TaskDetailPage with all IDs
+    final arguments = {
+      'taskId': taskId,
+      'projectId': projectId!,
+      'highlightCommentId': commentId,
+    };
+
+    debugPrint('📦 [NotificationNavigator] Arguments: $arguments');
+    debugPrint('📋 [NotificationNavigator] Navigating to TaskDetailPage...');
+
+    try {
+      await Navigator.pushNamed(
+        context,
+        AppRoutes.taskDetail,
+        arguments: arguments,
+      );
+
+      debugPrint('✅ [NotificationNavigator] Navigation executed');
+    } catch (e, stack) {
+      debugPrint('❌ [NotificationNavigator] Navigation error: $e');
+      debugPrint('Stack: $stack');
+    }
+  }
+
   /// ✅ HELPER: Refresh project data before navigation
   static Future<bool> _refreshProjectData(
     BuildContext context,
@@ -69,26 +156,20 @@ class NotificationNavigator {
       debugPrint('🔄 [NotificationNavigator] Refreshing project data...');
       debugPrint('🔄 projectId: $projectId');
 
-      // Get ProviderContainer from context
       final container = ProviderScope.containerOf(context);
-
-      // Get user data
       final user = container.read(userProvider);
       final userId = user.userId;
 
       debugPrint('🔄 userId: $userId');
 
-      // Create params
       final params = ProjectDetailParams(projectId, userId);
 
       debugPrint('🔄 Invalidating projectDetailProvider...');
 
-      // Invalidate provider to force refresh
       container.invalidate(projectDetailProvider(params));
 
       debugPrint('✅ Provider invalidated');
 
-      // Wait a bit to let provider refresh
       debugPrint('⏳ Waiting 400ms for data to refresh...');
       await Future.delayed(const Duration(milliseconds: 400));
 
@@ -113,7 +194,8 @@ class NotificationNavigator {
     debugPrint('   - taskId: $taskId');
     debugPrint('   - data: $data');
 
-    final projectId = data?['projectId'] as String?;
+    final projectId =
+        data?['projectId'] as String? ?? data?['ProjectId'] as String?;
 
     if (projectId == null || projectId.isEmpty) {
       debugPrint('❌ [NotificationNavigator] Missing projectId for task');
@@ -128,7 +210,6 @@ class NotificationNavigator {
     debugPrint('   - highlightTaskId: $taskId');
     debugPrint('   - route: ${AppRoutes.projectDetail}');
 
-    // ✅ Refresh project data before navigation
     final refreshSuccess = await _refreshProjectData(context, projectId);
 
     if (!refreshSuccess) {
@@ -137,17 +218,15 @@ class NotificationNavigator {
       );
     }
 
-    // Prepare arguments
     final arguments = {
       'projectId': projectId,
       'highlightTaskId': taskId,
-      'taskName': data?['taskName'],
-      'projectName': data?['projectName'],
+      'taskName': data?['taskName'] ?? data?['TaskTitle'],
+      'projectName': data?['projectName'] ?? data?['ProjectName'],
     };
 
     debugPrint('📦 [NotificationNavigator] Arguments: $arguments');
 
-    // Navigate
     try {
       Navigator.pushNamed(
         context,
@@ -182,7 +261,6 @@ class NotificationNavigator {
     );
     debugPrint('   - route: ${AppRoutes.projectDetail}');
 
-    // ✅ Refresh project data before navigation
     final refreshSuccess = await _refreshProjectData(context, projectId);
 
     if (!refreshSuccess) {
@@ -191,15 +269,13 @@ class NotificationNavigator {
       );
     }
 
-    // Prepare arguments
     final arguments = {
       'projectId': projectId,
-      'projectName': data?['projectName'],
+      'projectName': data?['projectName'] ?? data?['ProjectName'],
     };
 
     debugPrint('📦 [NotificationNavigator] Arguments: $arguments');
 
-    // Navigate
     try {
       Navigator.pushNamed(
         context,
@@ -239,16 +315,6 @@ class NotificationNavigator {
     );
 
     // TODO: Implement meeting navigation
-    // Navigator.pushNamed(
-    //   context,
-    //   AppRoutes.meeting,
-    //   arguments: {
-    //     'meetingId': meetingId,
-    //     'userId': data?['userId'],
-    //     'cameraOn': false,
-    //     'micOn': false,
-    //   },
-    // );
   }
 
   /// Fallback: Navigate to Notification List
@@ -263,6 +329,5 @@ class NotificationNavigator {
     );
 
     // TODO: Implement notification list navigation
-    // Navigator.pushNamed(context, AppRoutes.notificationList);
   }
 }

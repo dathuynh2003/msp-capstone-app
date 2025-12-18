@@ -11,7 +11,7 @@ class AppRoutes {
   static const String projectDetail = '/project-detail';
 
   // Task
-  // static const String taskDetail = '/task-detail';
+  static const String taskDetail = '/task-detail';
 
   // Meeting
   static const String meetingList = '/meetings';

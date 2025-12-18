@@ -9,10 +9,7 @@ class NotificationRemoteDatasource {
   Future<List<NotificationResponse>> getUserNotifications(String userId) async {
     final uri = Uri.parse("${ApiConfig.apiBaseUrl}/notification/user/$userId");
 
-    final response = await HttpClient.get(
-      uri,
-      headers: {"Content-Type": "application/json"},
-    );
+    final response = await HttpClient.get(uri);
 
     final data = jsonDecode(response.body);
 
@@ -56,10 +53,7 @@ class NotificationRemoteDatasource {
 
     // debugPrint('📝 [NotificationAPI] Marking as read: $notificationId');
 
-    final response = await HttpClient.put(
-      uri,
-      headers: {"Content-Type": "application/json"},
-    );
+    final response = await HttpClient.put(uri);
 
     final data = jsonDecode(response.body);
     // debugPrint('🔍 [NotificationAPI] Mark as Read Response: $data');
@@ -88,10 +82,7 @@ class NotificationRemoteDatasource {
 
     debugPrint('📝 [NotificationAPI] Marking all as read for user: $userId');
 
-    final response = await HttpClient.put(
-      uri,
-      headers: {"Content-Type": "application/json"},
-    );
+    final response = await HttpClient.put(uri);
 
     final data = jsonDecode(response.body);
     debugPrint('🔍 [NotificationAPI] Mark All Response: $data');
@@ -118,10 +109,7 @@ class NotificationRemoteDatasource {
 
     debugPrint('🗑️ [NotificationAPI] Deleting notification: $notificationId');
 
-    final response = await HttpClient.delete(
-      uri,
-      headers: {"Content-Type": "application/json"},
-    );
+    final response = await HttpClient.delete(uri);
 
     final data = jsonDecode(response.body);
     debugPrint('🔍 [NotificationAPI] Delete Response: $data');

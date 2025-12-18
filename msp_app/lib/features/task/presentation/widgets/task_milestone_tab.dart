@@ -51,6 +51,7 @@ class TaskMilestoneTab extends StatelessWidget {
     }
 
     return ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
       itemCount: milestones.length,
       itemBuilder: (context, index) {

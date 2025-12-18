@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:msp_app/core/models/api_response.dart';
+import 'package:msp_app/core/models/paging_response.dart';
 import 'package:msp_app/core/network/api_config.dart';
 import 'package:msp_app/core/network/http_client.dart';
+import 'package:msp_app/features/task/data/models/task_comment_dto.dart';
 import 'package:msp_app/features/task/data/models/task_detail_response.dart';
 
 class TaskRemoteDatasource {
@@ -13,10 +15,7 @@ class TaskRemoteDatasource {
     debugPrint('📡 [TaskAPI] GET Task Detail: $uri');
 
     try {
-      final response = await HttpClient.get(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-      );
+      final response = await HttpClient.get(uri);
 
       debugPrint('🔍 [TaskAPI] Status: ${response.statusCode}');
 
@@ -65,10 +64,7 @@ class TaskRemoteDatasource {
     debugPrint('📡 [TaskAPI] GET Task History: $uri');
 
     try {
-      final response = await HttpClient.get(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-      );
+      final response = await HttpClient.get(uri);
 
       debugPrint('🔍 [TaskAPI] History Status: ${response.statusCode}');
 
@@ -129,6 +125,136 @@ class TaskRemoteDatasource {
     }
   }
 
+  // ✅ Get Task Comments (with pagination)
+  Future<PagingResponse<TaskCommentDto>> getTaskComments(
+    String taskId, {
+    int pageIndex = 1,
+    int pageSize = 5,
+  }) async {
+    // ✅ CORRECT: Use Uri.replace with queryParameters
+    final baseUrl = Uri.parse('${ApiConfig.apiBaseUrl}/comments/task/$taskId');
+    final uri = baseUrl.replace(
+      queryParameters: {
+        'PageIndex': pageIndex.toString(),
+        'PageSize': pageSize.toString(),
+      },
+    );
+
+    debugPrint('');
+    debugPrint('========================================');
+    debugPrint('📡 [TaskAPI] GET Task Comments');
+    debugPrint('📡 Base URL: ${ApiConfig.apiBaseUrl}');
+    debugPrint('📡 Full URL: $uri');
+    debugPrint('📡 Query String: ${uri.query}'); // ✅ Check this
+    debugPrint('📡 Query Params: ${uri.queryParameters}'); // ✅ Check this
+    debugPrint('📡 TaskId: $taskId');
+    debugPrint('📡 PageIndex: $pageIndex');
+    debugPrint('📡 PageSize: $pageSize');
+    debugPrint('========================================');
+
+    try {
+      final response = await HttpClient.get(uri);
+
+      debugPrint('🔍 [TaskAPI] Comments Status: ${response.statusCode}');
+
+      // ✅ Handle 404 - no comments found
+      if (response.statusCode == 404) {
+        debugPrint('ℹ️ [TaskAPI] No comments found for task');
+        return PagingResponse(
+          items: [],
+          totalItems: 0,
+          pageIndex: pageIndex,
+          pageSize: pageSize,
+        );
+      }
+
+      // ✅ Handle other errors
+      if (response.statusCode != 200) {
+        debugPrint('⚠️ [TaskAPI] Comments error: ${response.statusCode}');
+        debugPrint(
+          '⚠️ [TaskAPI] Response: ${response.body}',
+        ); // ✅ Add response body
+        return PagingResponse(
+          items: [],
+          totalItems: 0,
+          pageIndex: pageIndex,
+          pageSize: pageSize,
+        );
+      }
+
+      if (response.body.isEmpty) {
+        debugPrint('ℹ️ [TaskAPI] Empty comments response');
+        return PagingResponse(
+          items: [],
+          totalItems: 0,
+          pageIndex: pageIndex,
+          pageSize: pageSize,
+        );
+      }
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+
+      // ✅ Debug: Print data structure
+      debugPrint('🔍 [TaskAPI] Response Keys: ${data.keys}');
+      if (data['data'] != null) {
+        final pagingData = data['data'] as Map<String, dynamic>;
+        debugPrint('🔍 [TaskAPI] Paging Keys: ${pagingData.keys}');
+        debugPrint('🔍 [TaskAPI] PageIndex: ${pagingData['pageIndex']}');
+        debugPrint('🔍 [TaskAPI] PageSize: ${pagingData['pageSize']}');
+        debugPrint('🔍 [TaskAPI] TotalItems: ${pagingData['totalItems']}');
+        debugPrint(
+          '🔍 [TaskAPI] Items Count: ${(pagingData['items'] as List).length}',
+        );
+      }
+
+      // ✅ Parse ApiResponse<PagingResponse<GetCommentResponse>>
+      final apiRes = ApiResponse<PagingResponse<TaskCommentDto>>.fromJson(
+        data,
+        (json) {
+          if (json == null) {
+            return PagingResponse(
+              items: [],
+              totalItems: 0,
+              pageIndex: pageIndex,
+              pageSize: pageSize,
+            );
+          }
+
+          return PagingResponse.fromJson(
+            json as Map<String, dynamic>,
+            (item) => TaskCommentDto.fromJson(item as Map<String, dynamic>),
+          );
+        },
+      );
+
+      if (apiRes.success && apiRes.data != null) {
+        debugPrint(
+          '✅ [TaskAPI] Comments Success: ${apiRes.data!.items.length} items (${apiRes.data!.totalItems} total)',
+        );
+        debugPrint('✅ [TaskAPI] Returned PageIndex: ${apiRes.data!.pageIndex}');
+        debugPrint('✅ [TaskAPI] Returned PageSize: ${apiRes.data!.pageSize}');
+        return apiRes.data!;
+      }
+
+      debugPrint('ℹ️ [TaskAPI] No comments data in response');
+      return PagingResponse(
+        items: [],
+        totalItems: 0,
+        pageIndex: pageIndex,
+        pageSize: pageSize,
+      );
+    } catch (e, stackTrace) {
+      debugPrint('⚠️ [TaskAPI] Comments Error: $e');
+      debugPrint('⚠️ [TaskAPI] Stack: $stackTrace');
+      return PagingResponse(
+        items: [],
+        totalItems: 0,
+        pageIndex: pageIndex,
+        pageSize: pageSize,
+      );
+    }
+  }
+
   // ✅ Get Task Detail With History (combines both APIs)
   Future<TaskDetailResponse> getTaskDetailWithHistory(String taskId) async {
     debugPrint('');
@@ -142,10 +268,12 @@ class TaskRemoteDatasource {
       final results = await Future.wait([
         getTaskDetail(taskId),
         getTaskHistory(taskId),
+        getTaskComments(taskId, pageSize: 5),
       ]);
 
       final taskDetail = results[0] as TaskDetailResponse;
       final taskHistories = results[1] as List<TaskHistoryDto>;
+      final commentsResponse = results[2] as PagingResponse<TaskCommentDto>;
 
       debugPrint('');
       debugPrint('✅ [TaskAPI] Merge complete:');
@@ -153,6 +281,9 @@ class TaskRemoteDatasource {
       debugPrint('   📊 Status: ${taskDetail.status}');
       debugPrint('   📜 Histories: ${taskHistories.length} items');
       debugPrint('   📍 Milestones: ${taskDetail.milestones.length} items');
+      debugPrint(
+        '   💬 Comments: ${commentsResponse.items.length} items (${commentsResponse.totalItems} total)',
+      );
       debugPrint('');
 
       // ✅ Create new TaskDetailResponse with merged history
@@ -172,10 +303,12 @@ class TaskRemoteDatasource {
         user: taskDetail.user,
         reviewer: taskDetail.reviewer,
         milestones: taskDetail.milestones,
-        taskHistories: taskHistories, // ✅ Merged histories
+        taskHistories: taskHistories, // Merged histories
+        comments: commentsResponse.items, // Merged comments
+        totalComments: commentsResponse.totalItems,
       );
     } catch (e) {
-      debugPrint('❌ [TaskAPI] Error fetching task with history: $e');
+      debugPrint('[TaskAPI] Error fetching task with history: $e');
       rethrow;
     }
   }

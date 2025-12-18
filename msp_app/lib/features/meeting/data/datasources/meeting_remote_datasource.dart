@@ -7,10 +7,8 @@ import 'dart:convert';
 class MeetingRemoteDatasource {
   Future<List<GetMeetingResponse>> getMeetingsByUserId(String userId) async {
     final uri = Uri.parse("${ApiConfig.apiBaseUrl}/meetings/by-user/$userId");
-    final response = await HttpClient.get(
-      uri,
-      headers: {"Content-Type": "application/json"},
-    );
+    final response = await HttpClient.get(uri);
+
     final data = jsonDecode(response.body);
     final apiRes = ApiResponse<List<GetMeetingResponse>>.fromJson(
       data,

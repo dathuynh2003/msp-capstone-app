@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:msp_app/features/task/presentation/pages/task_detail_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/widgets/auth_wrapper.dart';
 import '../../features/home/presentation/pages/member_home_page.dart';
@@ -103,6 +104,46 @@ class RouteGenerator {
             userId: userId,
             cameraOn: args['cameraOn'] as bool? ?? false,
             micOn: args['micOn'] as bool? ?? false,
+          ),
+        );
+
+      // ============ Task Routes ============
+      case AppRoutes.taskDetail:
+        debugPrint('📋 [RouteGenerator] → TaskDetailPage');
+
+        if (args is! Map<String, dynamic>) {
+          debugPrint(
+            '❌ [RouteGenerator] Invalid arguments type: ${args.runtimeType}',
+          );
+          return _errorRoute('Invalid arguments for Task Detail');
+        }
+
+        final taskId = args['taskId'] as String?;
+        final projectId = args['projectId'] as String?;
+        final highlightCommentId =
+            args['highlightCommentId'] as String?; // ✅ Add
+
+        debugPrint('   - taskId: $taskId');
+        debugPrint('   - projectId: $projectId');
+        debugPrint('   - highlightCommentId: $highlightCommentId');
+
+        if (taskId == null || taskId.isEmpty) {
+          debugPrint('❌ [RouteGenerator] Missing or empty taskId');
+          return _errorRoute('Missing taskId');
+        }
+
+        if (projectId == null || projectId.isEmpty) {
+          debugPrint('❌ [RouteGenerator] Missing or empty projectId');
+          return _errorRoute('Missing projectId');
+        }
+
+        debugPrint('✅ [RouteGenerator] Creating TaskDetailPage');
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => TaskDetailPage(
+            taskId: taskId,
+            projectId: projectId,
+            highlightCommentId: highlightCommentId, // ✅ Pass commentId
           ),
         );
 

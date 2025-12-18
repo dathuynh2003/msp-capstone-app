@@ -1,44 +1,124 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:msp_app/features/task/data/models/task_detail_response.dart';
+import 'package:msp_app/features/task/presentation/widgets/task_comments_section.dart';
+import 'package:msp_app/features/task/presentation/providers/task_detail_provider.dart';
 
 const Color pastelCream = Color(0xFFFFF5ED);
 
-class TaskInfoTab extends StatelessWidget {
+class TaskInfoTab extends ConsumerStatefulWidget {
   final TaskDetailResponse task;
-  final Color statusColor; // ✅ Add statusColor
+  final Color statusColor;
+  final String? highlightCommentId; // ✅ ADD
 
-  const TaskInfoTab({super.key, required this.task, required this.statusColor});
+  const TaskInfoTab({
+    super.key,
+    required this.task,
+    required this.statusColor,
+    this.highlightCommentId, // ✅ ADD
+  });
+
+  @override
+  ConsumerState<TaskInfoTab> createState() => _TaskInfoTabState();
+}
+
+class _TaskInfoTabState extends ConsumerState<TaskInfoTab> {
+  // ✅ ADD: GlobalKey for comments section
+  final GlobalKey _commentsSectionKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+
+    // ✅ ADD: Scroll to comment after build
+    if (widget.highlightCommentId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToComments();
+      });
+    }
+  }
+
+  // ✅ ADD: Scroll to comments section
+  void _scrollToComments() {
+    try {
+      debugPrint('');
+      debugPrint('========================================');
+      debugPrint('📜 [TaskInfoTab] Scrolling to comments section');
+      debugPrint('📜 HighlightCommentId: ${widget.highlightCommentId}');
+      debugPrint('========================================');
+
+      final context = _commentsSectionKey.currentContext;
+      if (context != null) {
+        Scrollable.ensureVisible(
+          context,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+          alignment: 0.1, // Position at top with some padding
+        );
+        debugPrint('✅ [TaskInfoTab] Scroll executed');
+      } else {
+        debugPrint('❌ [TaskInfoTab] Comments section context is null');
+      }
+    } catch (e) {
+      debugPrint('❌ [TaskInfoTab] Scroll error: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final isLoadingMore = ref.watch(
+      isLoadingMoreCommentsProvider(widget.task.id),
+    );
+    final isReloading = ref.watch(isReloadingCommentsProvider(widget.task.id));
+
     return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
       children: [
-        // Assignee - Always show
+        // Assignee
         _buildInfoCard(
           icon: Icons.person,
           label: 'Assignee',
-          child: task.user != null
-              ? _buildUserCard(task.user!)
+          child: widget.task.user != null
+              ? _buildUserCard(widget.task.user!)
               : _buildEmptyState('No assignee assigned'),
         ),
 
         const SizedBox(height: 16),
 
-        // Reviewer - Always show
+        // Reviewer
         _buildInfoCard(
           icon: Icons.rate_review,
           label: 'Reviewer',
-          child: task.reviewer != null
-              ? _buildUserCard(task.reviewer!)
+          child: widget.task.reviewer != null
+              ? _buildUserCard(widget.task.reviewer!)
               : _buildEmptyState('No reviewer assigned'),
         ),
 
         const SizedBox(height: 16),
 
         // Timeline Card
-        _buildTimelineCard(task),
+        _buildTimelineCard(widget.task),
+
+        const SizedBox(height: 16),
+
+        // ✅ UPDATED: Add key and pass highlightCommentId
+        TaskCommentsSection(
+          key: _commentsSectionKey, // ✅ ADD KEY
+          comments: widget.task.comments,
+          totalComments: widget.task.totalComments,
+          statusColor: widget.statusColor,
+          highlightCommentId: widget.highlightCommentId, // ✅ PASS
+          isLoadingMore: isLoadingMore,
+          isReloading: isReloading,
+          onLoadMore: () {
+            ref.read(loadMoreCommentsProvider(widget.task.id))();
+          },
+          onReload: () {
+            ref.read(reloadCommentsProvider(widget.task.id))();
+          },
+        ),
       ],
     );
   }
@@ -54,12 +134,12 @@ class TaskInfoTab extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: statusColor.withOpacity(0.3), // ✅ Status color
+          color: widget.statusColor.withOpacity(0.3),
           width: 2,
         ),
         boxShadow: [
           BoxShadow(
-            color: statusColor.withOpacity(0.1), // ✅ Status color
+            color: widget.statusColor.withOpacity(0.1),
             blurRadius: 12,
             offset: const Offset(0, 2),
           ),
@@ -73,14 +153,10 @@ class TaskInfoTab extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.15), // ✅ Status color
+                  color: widget.statusColor.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(
-                  icon,
-                  size: 20,
-                  color: statusColor,
-                ), // ✅ Status color
+                child: Icon(icon, size: 20, color: widget.statusColor),
               ),
               const SizedBox(width: 12),
               Text(
@@ -104,10 +180,10 @@ class TaskInfoTab extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: statusColor.withOpacity(0.08), // ✅ Status color
+        color: widget.statusColor.withOpacity(0.08),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: statusColor.withOpacity(0.2), // ✅ Status color
+          color: widget.statusColor.withOpacity(0.2),
           width: 1,
         ),
       ),
@@ -117,7 +193,7 @@ class TaskInfoTab extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.2), // ✅ Status color
+              color: widget.statusColor.withOpacity(0.2),
               shape: BoxShape.circle,
               image: user.avatarUrl.isNotEmpty
                   ? DecorationImage(
@@ -127,11 +203,7 @@ class TaskInfoTab extends StatelessWidget {
                   : null,
             ),
             child: user.avatarUrl.isEmpty
-                ? Icon(
-                    Icons.person,
-                    size: 24,
-                    color: statusColor,
-                  ) // ✅ Status color
+                ? Icon(Icons.person, size: 24, color: widget.statusColor)
                 : null,
           ),
           const SizedBox(width: 14),
@@ -200,12 +272,12 @@ class TaskInfoTab extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: statusColor.withOpacity(0.3), // ✅ Status color
+          color: widget.statusColor.withOpacity(0.3),
           width: 2,
         ),
         boxShadow: [
           BoxShadow(
-            color: statusColor.withOpacity(0.1), // ✅ Status color
+            color: widget.statusColor.withOpacity(0.1),
             blurRadius: 12,
             offset: const Offset(0, 2),
           ),
@@ -219,13 +291,13 @@ class TaskInfoTab extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.15), // ✅ Status color
+                  color: widget.statusColor.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   Icons.calendar_today,
                   size: 20,
-                  color: statusColor, // ✅ Status color
+                  color: widget.statusColor,
                 ),
               ),
               const SizedBox(width: 12),
@@ -268,7 +340,6 @@ class TaskInfoTab extends StatelessWidget {
 
           const SizedBox(height: 20),
 
-          // ✅ Start Date & End Date - Always show with placeholders
           Row(
             children: [
               Expanded(
@@ -299,14 +370,10 @@ class TaskInfoTab extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          Divider(
-            color: statusColor.withOpacity(0.3),
-            height: 1,
-          ), // ✅ Status color
+          Divider(color: widget.statusColor.withOpacity(0.3), height: 1),
 
           const SizedBox(height: 16),
 
-          // ✅ Created & Last Updated
           Row(
             children: [
               Expanded(
@@ -352,7 +419,7 @@ class TaskInfoTab extends StatelessWidget {
               ? Colors.red
               : isEmpty
               ? Colors.grey[400]
-              : statusColor, // ✅ Status color
+              : widget.statusColor,
         ),
         const SizedBox(width: 10),
         Expanded(

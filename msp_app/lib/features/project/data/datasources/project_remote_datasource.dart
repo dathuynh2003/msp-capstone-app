@@ -15,10 +15,8 @@ class ProjectRemoteDatasource {
     final uri = Uri.parse(
       "${ApiConfig.apiBaseUrl}/projects/$projectId/by-user/$userId",
     );
-    final response = await HttpClient.get(
-      uri,
-      headers: {"Content-Type": "application/json"},
-    );
+    final response = await HttpClient.get(uri);
+
     final data = jsonDecode(response.body);
 
     final apiRes = ApiResponse<ProjectDetailResponse>.fromJson(
@@ -40,10 +38,8 @@ class ProjectRemoteDatasource {
     final uri = Uri.parse(
       "${ApiConfig.apiBaseUrl}/projects/by-manager/$managerId",
     );
-    final response = await HttpClient.get(
-      uri,
-      headers: {"Content-Type": "application/json"},
-    );
+    final response = await HttpClient.get(uri);
+
     final data = jsonDecode(response.body);
 
     // B1: Parse vào ApiResponse với PagingResponse<GetProjectResponse>
@@ -70,10 +66,8 @@ class ProjectRemoteDatasource {
     final uri = Uri.parse(
       "${ApiConfig.apiBaseUrl}/projects/by-member/$memberId",
     );
-    final response = await HttpClient.get(
-      uri,
-      headers: {"Content-Type": "application/json"},
-    );
+    final response = await HttpClient.get(uri);
+
     final data = jsonDecode(response.body);
 
     final apiRes = ApiResponse<PagingResponse<GetProjectResponse>>.fromJson(
