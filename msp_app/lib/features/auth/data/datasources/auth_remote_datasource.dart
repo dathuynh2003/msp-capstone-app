@@ -1,3 +1,5 @@
+import 'package:msp_app/features/auth/data/models/google_login_request.dart';
+
 import '../../../../core/network/api_config.dart';
 import '../../../../core/network/http_client.dart';
 import '../models/login_request.dart';
@@ -21,6 +23,28 @@ class AuthRemoteDatasource {
     );
     if (response.statusCode == 200 && apiRes.success) {
       if (apiRes.data == null) throw Exception("No login data returned!");
+      return apiRes.data!;
+    } else {
+      throw Exception(apiRes.message);
+    }
+  }
+
+  Future<LoginResponse> googleLogin(GoogleLoginRequest request) async {
+    final uri = Uri.parse("${ApiConfig.apiBaseUrl}/auth/google-login");
+    final response = await HttpClient.post(
+      uri,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(request.toJson()),
+    );
+    final data = jsonDecode(response.body);
+
+    final apiRes = ApiResponse<LoginResponse>.fromJson(
+      data,
+      (json) => LoginResponse.fromJson(json),
+    );
+    if (response.statusCode == 200 && apiRes.success) {
+      if (apiRes.data == null)
+        throw Exception("No Google login data returned!");
       return apiRes.data!;
     } else {
       throw Exception(apiRes.message);

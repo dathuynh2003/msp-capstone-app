@@ -23,10 +23,28 @@ class UserInfo {
     role: "Member",
     avatarUrl: "",
   );
+
+  // ✅ Copy method for easier updates
+  UserInfo copyWith({
+    String? userId,
+    String? userName,
+    String? email,
+    String? role,
+    String? avatarUrl,
+  }) => UserInfo(
+    userId: userId ?? this.userId,
+    userName: userName ?? this.userName,
+    email: email ?? this.email,
+    role: role ?? this.role,
+    avatarUrl: avatarUrl ?? this.avatarUrl,
+  );
 }
 
 class UserProvider extends StateNotifier<UserInfo> {
   UserProvider() : super(UserInfo.empty());
+
+  // ✅ REMOVED: Auto-load from constructor
+  // AuthProvider will handle updates
 
   Future<void> loadFromPrefs() async {
     final info = await UserPrefs.getUser();
@@ -39,15 +57,13 @@ class UserProvider extends StateNotifier<UserInfo> {
     );
   }
 
-  Future<void> logout() async {
-    await UserPrefs.clear();
+  void clear() {
     state = UserInfo.empty();
   }
 }
 
+// ✅ FIXED: Remove auto-load on initialization
 final userProvider = StateNotifierProvider<UserProvider, UserInfo>((ref) {
-  final provider = UserProvider();
-  // Tự động load từ prefs khi khởi tạo, hoặc gọi từ AuthWrapper/Login
-  provider.loadFromPrefs();
-  return provider;
+  return UserProvider();
+  // AuthProvider will update this after login/session restore
 });
